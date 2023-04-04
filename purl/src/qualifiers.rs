@@ -428,7 +428,10 @@ impl<'a> DoubleEndedIterator for Iter<'a> {
 }
 
 fn is_valid_qualifier_name(k: &str) -> bool {
-    !k.is_empty() && k.chars().all(|c| c.is_ascii_alphanumeric() || ['.', '-', '_'].contains(&c))
+    // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#rules-for-each-purl-component
+    const ALLOWED_SPECIAL_CHARS: &[char] = &['.', '-', '_'];
+    !k.is_empty()
+        && k.chars().all(|c| c.is_ascii_alphanumeric() || ALLOWED_SPECIAL_CHARS.contains(&c))
 }
 
 /// An iterator over the qualifier key value pairs.

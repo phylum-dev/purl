@@ -322,7 +322,9 @@ impl<T> GenericPurl<T> {
 /// PURL spec.
 #[must_use]
 fn is_valid_package_type(package_type: &str) -> bool {
-    package_type.chars().all(|c| c.is_ascii_alphanumeric() || ['.', '+', '-'].contains(&c))
+    // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#rules-for-each-purl-component
+    const ALLOWED_SPECIAL_CHARS: &[char] = &['.', '+', '-'];
+    package_type.chars().all(|c| c.is_ascii_alphanumeric() || ALLOWED_SPECIAL_CHARS.contains(&c))
 }
 
 /// Try to convert a `SmallString` to lowercase without allocating.
