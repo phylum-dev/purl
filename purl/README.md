@@ -37,3 +37,9 @@ assert_eq!("pkg:npm/%40acme/example", &purl.to_string(),);
 # Ok(())
 # }
 ```
+
+# Features
+
+- package-type: [`PackageType`] and related types
+- serde: PURLs can be serialized and deserialized from strings
+- smartstring: The smartstring crate is used to reduce heap allocations
