@@ -11,121 +11,66 @@ on:
 env:
   CARGO_TERM_COLOR: always
 
-# A baseline workflow that does `cargo fmt -- --check`, `cargo clippy --all-targets -- -D warnings`, and `cargo test` in parallel jobs
-# Repos should append any additional CI/CD needs as neccessary
-# Additional jobs like pushing up a docker image are provided but disabled by default via the "if" conditional and has other "# SET ME" things to set if enabled
 jobs:
-  format-check:
-      runs-on: amd64
-      steps:
-      - uses: actions/checkout@v2
-      - name: Install minimal stable rustfmt
-        uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          components: rustfmt
-      - name: Format Check
-        #run cargo fmt to fix if in violation
-        run: cargo fmt -- --check
-  build:
-    runs-on: amd64
+  check:
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Install minimal stable with clippy
-      uses: actions-rs/toolchain@v1
-      with:
-          profile: minimal
-          toolchain: stable
-          components: clippy
-    - name: Build
-      run: cargo build
-    - name: Clippy Linting
-    # --all-targets means apply to test code too. Without it just applies to application code
-      run: cargo clippy --all-targets -- -D warnings
-  test:
-    runs-on: amd64
-    steps:
-    - uses: actions/checkout@v2
-    - name: Install minimal stable
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-    # - name: Start Docker Compose
-    #   run: docker-compose up -d
-    # - name: Check containers after spinup
-    #   run: docker ps -a
-    - name: Run tests
-      run: cargo test --verbose
-    # - name: Stop containers
-    #   if: ${{ always() }}
-    #   run: docker-compose down
-  build_image:
-    # The type of runner that the job will run on
-    runs-on: amd64
-    needs: [test, build, format-check]
-    if: ${{ false }}  # Disable for the template, users should opt into enabling the job
-    #if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/development' || startsWith(github.ref, 'refs/tags/v')
-    # Steps represent a sequence of tasks that will be executed as part of the job
-    steps:
-      # Checks-out your repsitory under $GITHUB_WORKSPACE, so your job can access it
-      - uses: actions/checkout@v2
-        with:
-          token: ${{secrets.BOT_SUBMODULE_TOKEN}}
-          submodules: recursive
-      - uses: webfactory/ssh-agent@v0.5.0
-        with:
-          ssh-private-key: ${{ secrets.MACHINE_USER_SSH_KEY }}
-      - name: Inject slug/short variables
-        uses: rlespinasse/github-slug-action@v3.x
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v1
-        with:
-          install: true
-          driver-opts: network=host
 
-      - name: Login to Harbor
-        uses: docker/login-action@v1
-        with:
-          registry: harbor.prod-aws.phylum.dev
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_TOKEN }}
-      - name: Build and push Docker images
-      # You may pin to the exact commit or the version.
-      # uses: docker/build-push-action@4a531fa5a603bab87dfa56578bd82b28508c9547
-        uses: docker/build-push-action@v2.2.2
-        with:
-          # Build's context is the set of files located in the specified PATH or URL
-          context: # SET ME
-          # Path to the Dockerfile
-          file: # optional
-          # List of build-time variables
-          build-args:
-          # List of metadata for an image
-          labels: # optional
-          # List of tags
-          tags: # SET ME harbor.prod-aws.phylum.dev/phylum/NAME_HERE:${{ env.GITHUB_REF_SLUG }}
-          # Always attempt to pull a newer version of the image
-          pull: true
-          # Sets the target stage to build
-          target: # optional
-          # Do not use cache when building the image
-          no-cache: # optional, default is false
-          # List of target platforms for build
-          platforms: # optional
-          # Load is a shorthand for --output=type=docker
-          load: # optional, default is false
-          # Push is a shorthand for --output=type=registry
-          push: true
-          # List of output destinations (format: type=local,dest=path)
-          outputs: # optional
-          # List of external cache sources for buildx (eg. user/app:cache, type=local,src=path/to/dir)
-          cache-from: type=registry,ref=harbor.prod-aws.phylum.dev/phylum/phylum-janusgraph:${{ env.GITHUB_REF_SLUG }}
-          # List of cache export destinations for buildx (eg. user/app:cache, type=local,dest=path/to/dir)
-          cache-to: type=inline
-          # List of secrets to expose to the build (eg. key=value, GIT_AUTH_TOKEN=mytoken)
-          secrets: # optional
-          # GitHub Token used to authenticate against a repository for Git context
-          github-token: # optional, default is ${{ github.token }}
-          ssh: default
+    - name: Install nightly with rustfmt
+      uses: dtolnay/rust-toolchain@nightly
+      with:
+        components: rustfmt
+    - name: Install stable with clippy
+      uses: dtolnay/rust-toolchain@stable
+      with:
+        components: clippy
+    - uses: Swatinem/rust-cache@v2
+
+    - name: Format Check
+      #run cargo fmt to fix if in violation
+      run: cargo +nightly fmt -- --check
+
+    - name: Clippy Linting
+      # --all-targets means apply to test code too. Without it just applies to application code
+      run: cargo clippy --all-targets -p phylum-purl -- -D warnings
+
+    - name: Regenerate test suite
+      run: cargo xtask codegen
+    - name: Ensure no changes to test suite
+      run: |
+        git diff --exit-code -- purl_test
+
+    - name: Check docs
+      run: RUSTDOCFLAGS="-D warnings" cargo xtask doc -p phylum-purl --no-deps
+
+  test:
+    strategy:
+      matrix:
+        include:
+          - name: Minimal
+            runner: test
+            features: --no-default-features
+          - name: Default
+            runner: test
+            features: ""
+          - name: Full
+            runner: tarpaulin
+            features: --all-features
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install stable with clippy
+      uses: dtolnay/rust-toolchain@stable
+    - uses: Swatinem/rust-cache@v2
+    - name: Install tarpaulin
+      if: ${{ matrix.runner == 'tarpaulin' }}
+      run: |
+        curl --proto '=https' --tlsv1.2 -sSfL https://github.com/xd009642/tarpaulin/releases/download/0.25.1/cargo-tarpaulin-x86_64-unknown-linux-gnu.tar.gz > tarpaulin.tar.gz
+        printf 'd3f687ffc0c30ee1e7e5ea63f58b4fb770ce38f6d97d1afca340846ed783de85  tarpaulin.tar.gz' | sha256sum -c || exit 1
+        mkdir -p ~/.cargo/bin
+        tar -xzf tarpaulin.tar.gz -C ~/.cargo/bin
+        rm tarpaulin.tar.gz
+
+    - name: Run tests
+      run: cargo ${{ matrix.runner }} ${{ matrix.features }}
