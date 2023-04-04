@@ -246,11 +246,12 @@ impl PurlShape for PackageType {
 fn fix_pypi_name(name: &mut SmallString) {
     // https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization
     // Replace runs of consecutive ".-_" characters with a single "-".
-    if name.contains(['-', '_', '.']) {
+    const DASH_CHARACTERS: &[char] = &['-', '_', '.'];
+    if name.contains(DASH_CHARACTERS) {
         let mut result = SmallString::new();
         let mut in_dash = false;
         for c in name.chars() {
-            if ['-', '_', '.'].contains(&c) {
+            if DASH_CHARACTERS.contains(&c) {
                 if !in_dash {
                     result.push('-');
                     in_dash = true;
