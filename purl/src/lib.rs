@@ -232,12 +232,10 @@ pub struct PurlParts {
 /// use phylum_purl::{PackageType, Purl};
 ///
 /// // Use the builder if you want to set fields besides the type and name.
-/// let purl = Purl::builder(PackageType::Npm, "@my-company/my-package")
-///     .with_version(Some("1.2.3"))
-///     .build()
-///     .unwrap();
+/// let purl =
+///     Purl::builder(PackageType::Npm, "my-package").with_version(Some("1.2.3")).build().unwrap();
 ///
-/// assert_eq!("pkg:npm/%40my-company%2Fmy-package@1.2.3", &purl.to_string());
+/// assert_eq!("pkg:npm/my-package@1.2.3", &purl.to_string());
 /// ```
 ///
 /// # See also
