@@ -9,7 +9,8 @@ use crate::{ParseError, SmallString};
 
 /// A list of qualifiers.
 ///
-/// Internally, qualifiers are stored as a sorted list of key-value pairs.
+/// Internally, qualifiers are stored as a sorted list of key-value pairs, ready
+/// to be joined into a properly formatted PURL string.
 ///
 /// The keys are always valid qualifier names in their canonical format
 /// (lowercase). Uppercase keys are automatically converted to lowercase.
