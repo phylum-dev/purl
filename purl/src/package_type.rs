@@ -273,13 +273,13 @@ mod tests {
 
     #[test]
     fn nuget_lowercases_names() {
-        let purl = PurlBuilder::new(crate::PackageType::NuGet, "Newtonsoft.Json").build().unwrap();
+        let purl = Purl::new(PackageType::NuGet, "Newtonsoft.Json").unwrap();
         assert_eq!("pkg:nuget/newtonsoft.json", &purl.to_string());
     }
 
     #[test]
     fn pypi_lowercases_names() {
-        let purl = PurlBuilder::new(crate::PackageType::PyPI, "PyTest").build().unwrap();
+        let purl = Purl::new(PackageType::PyPI, "PyTest").unwrap();
         assert_eq!("pkg:pypi/pytest", &purl.to_string());
     }
 
@@ -306,13 +306,40 @@ mod tests {
 
     #[test]
     fn cargo_does_not_lowercase_names() {
-        let purl = PurlBuilder::new(crate::PackageType::Cargo, "Inflector").build().unwrap();
+        let purl = Purl::new(PackageType::Cargo, "Inflector").unwrap();
         assert_eq!("pkg:cargo/Inflector", &purl.to_string());
     }
 
     #[test]
     fn npm_does_not_lowercase_names() {
-        let purl = PurlBuilder::new(crate::PackageType::Npm, "parseUri").build().unwrap();
+        let purl = Purl::new(PackageType::Npm, "parseUri").unwrap();
         assert_eq!("pkg:npm/parseUri", &purl.to_string());
+    }
+
+    #[test]
+    fn maven_requires_namespace() {
+        let error = Purl::new(PackageType::Maven, "invalid").unwrap_err();
+        assert!(
+            matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),
+            "Expected missing namespace error but got {error}",
+        );
+    }
+
+    #[test]
+    fn golang_requires_namespace() {
+        let error = Purl::new(PackageType::Maven, "invalid").unwrap_err();
+        assert!(
+            matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),
+            "Expected missing namespace error but got {error}",
+        );
+    }
+
+    #[test]
+    fn golang_lowercases_names() {
+        let purl = Purl::builder(PackageType::Golang, "Cobra")
+            .with_namespace(Some("GitHub.com/SPF13"))
+            .build()
+            .unwrap();
+        assert_eq!("pkg:golang/github.com/spf13/cobra", &purl.to_string());
     }
 }
