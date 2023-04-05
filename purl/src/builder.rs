@@ -14,7 +14,7 @@ use crate::{GenericPurl, ParseError, PurlParts, PurlShape, SmallString};
 ///
 /// // Use the builder if you want to set fields besides the type and name.
 /// let purl = PurlBuilder::new(PackageType::Maven, "my-package")
-///     .with_namespace(Some("my.company"))
+///     .with_namespace("my.company")
 ///     .build()
 ///     .unwrap();
 ///
@@ -49,20 +49,20 @@ impl<T> GenericPurlBuilder<T> {
 
     /// Set the namespace.
     ///
-    /// Passing `None` unsets the namespace.
-    pub fn with_namespace<S>(mut self, new: Option<S>) -> Self
+    /// Passing `""` unsets the namespace.
+    pub fn with_namespace<S>(mut self, new: S) -> Self
     where
         SmallString: From<S>,
     {
-        self.parts.namespace = new.map(SmallString::from);
+        self.parts.namespace = SmallString::from(new);
         self
     }
 
     /// Unset the namespace.
     ///
-    /// This is the same as passing `None` to [`Self::with_namespace`].
+    /// This is the same as passing `""` to [`Self::with_namespace`].
     pub fn without_namespace(mut self) -> Self {
-        self.parts.namespace = None;
+        self.parts.namespace = Default::default();
         self
     }
 
@@ -77,20 +77,20 @@ impl<T> GenericPurlBuilder<T> {
 
     /// Set the version.
     ///
-    /// Passing `None` unsets the version.
-    pub fn with_version<S>(mut self, new: Option<S>) -> Self
+    /// Passing `""` unsets the version.
+    pub fn with_version<S>(mut self, new: S) -> Self
     where
         SmallString: From<S>,
     {
-        self.parts.version = new.map(SmallString::from);
+        self.parts.version = SmallString::from(new);
         self
     }
 
     /// Unset the version.
     ///
-    /// This is the same as passing `None` to [`Self::with_version`].
+    /// This is the same as passing `""` to [`Self::with_version`].
     pub fn without_version(mut self) -> Self {
-        self.parts.version = None;
+        self.parts.version = Default::default();
         self
     }
 
@@ -128,20 +128,20 @@ impl<T> GenericPurlBuilder<T> {
 
     /// Set the subpath.
     ///
-    /// Passing `None` will unset the subpath.
-    pub fn with_subpath<S>(mut self, new: Option<S>) -> Self
+    /// Passing `""` will unset the subpath.
+    pub fn with_subpath<S>(mut self, new: S) -> Self
     where
         SmallString: From<S>,
     {
-        self.parts.subpath = new.map(SmallString::from);
+        self.parts.subpath = SmallString::from(new);
         self
     }
 
     /// Unset the subpath.
     ///
-    /// This is the same as passing `None` to [`Self::with_subpath`].
+    /// This is the same as passing `""` to [`Self::with_subpath`].
     pub fn without_subpath(mut self) -> Self {
-        self.parts.subpath = None;
+        self.parts.subpath = Default::default();
         self
     }
 
@@ -153,6 +153,10 @@ impl<T> GenericPurlBuilder<T> {
     where
         T: PurlShape,
     {
+        if self.parts.name.is_empty() {
+            return Err(T::Error::from(ParseError::MissingRequiredField(crate::PurlField::Name)));
+        }
+
         self.package_type.finish(&mut self.parts)?;
 
         let GenericPurlBuilder { package_type, parts } = self;
@@ -169,6 +173,7 @@ mod tests {
 
     use super::*;
     use crate::qualifiers::Qualifiers;
+    use crate::PurlField;
 
     #[test]
     fn with_package_type_sets_type() {
@@ -179,28 +184,18 @@ mod tests {
 
     #[test]
     fn with_namespace_some_sets_namespace() {
-        let builder = GenericPurlBuilder::<&str>::default().with_namespace(Some("new"));
-        assert_eq!(Some("new"), builder.parts.namespace.as_deref());
-    }
-
-    #[test]
-    fn with_namespace_none_unsets_namespace() {
-        let builder = GenericPurlBuilder {
-            package_type: "",
-            parts: PurlParts { namespace: Some("old".into()), ..Default::default() },
-        }
-        .with_namespace(None::<&str>);
-        assert_eq!(None, builder.parts.namespace);
+        let builder = GenericPurlBuilder::<&str>::default().with_namespace("new");
+        assert_eq!("new", &builder.parts.namespace);
     }
 
     #[test]
     fn without_namespace_unsets_namespace() {
         let builder = GenericPurlBuilder {
             package_type: "",
-            parts: PurlParts { namespace: Some("old".into()), ..Default::default() },
+            parts: PurlParts { namespace: "old".into(), ..Default::default() },
         }
         .without_namespace();
-        assert_eq!(None, builder.parts.namespace);
+        assert_eq!("", &builder.parts.namespace);
     }
 
     #[test]
@@ -211,28 +206,18 @@ mod tests {
 
     #[test]
     fn with_version_some_sets_version() {
-        let builder = GenericPurlBuilder::<&str>::default().with_version(Some("new"));
-        assert_eq!(Some("new"), builder.parts.version.as_deref());
-    }
-
-    #[test]
-    fn with_version_none_unsets_version() {
-        let builder = GenericPurlBuilder {
-            package_type: "",
-            parts: PurlParts { version: Some("old".into()), ..Default::default() },
-        }
-        .with_version(None::<&str>);
-        assert_eq!(None, builder.parts.version);
+        let builder = GenericPurlBuilder::<&str>::default().with_version("new");
+        assert_eq!("new", &builder.parts.version);
     }
 
     #[test]
     fn without_version_unsets_version() {
         let builder = GenericPurlBuilder {
             package_type: "",
-            parts: PurlParts { version: Some("old".into()), ..Default::default() },
+            parts: PurlParts { version: "old".into(), ..Default::default() },
         }
         .without_version();
-        assert_eq!(None, builder.parts.version);
+        assert_eq!("", &builder.parts.version);
     }
 
     #[test]
@@ -319,40 +304,30 @@ mod tests {
 
     #[test]
     fn with_subpath_some_sets_subpath() {
-        let builder = GenericPurlBuilder::<&str>::default().with_subpath(Some("new"));
-        assert_eq!(Some("new"), builder.parts.subpath.as_deref());
-    }
-
-    #[test]
-    fn with_subpath_none_unsets_subpath() {
-        let builder = GenericPurlBuilder {
-            package_type: "",
-            parts: PurlParts { subpath: Some("old".into()), ..Default::default() },
-        }
-        .with_subpath(None::<&str>);
-        assert_eq!(None, builder.parts.subpath);
+        let builder = GenericPurlBuilder::<&str>::default().with_subpath("new");
+        assert_eq!("new", &builder.parts.subpath);
     }
 
     #[test]
     fn without_subpath_unsets_subpath() {
         let builder = GenericPurlBuilder {
             package_type: "",
-            parts: PurlParts { subpath: Some("old".into()), ..Default::default() },
+            parts: PurlParts { subpath: "old".into(), ..Default::default() },
         }
         .without_subpath();
-        assert_eq!(None, builder.parts.subpath);
+        assert_eq!("", &builder.parts.subpath);
     }
 
     #[test]
     fn build_works() {
         let purl = GenericPurlBuilder::default()
             .with_package_type(Cow::Borrowed("type"))
-            .with_namespace(Some("namespace"))
+            .with_namespace("namespace")
             .with_name("name")
-            .with_version(Some("version"))
+            .with_version("version")
             .with_qualifier("key", Some("value"))
             .unwrap()
-            .with_subpath(Some("subpath"))
+            .with_subpath("subpath")
             .build()
             .expect("build failed");
         assert_eq!("type", purl.package_type().package_type());
@@ -360,5 +335,11 @@ mod tests {
         assert_eq!(Some("version"), purl.version());
         assert_eq!(Some("value"), purl.qualifiers().get("key"));
         assert_eq!(Some("subpath"), purl.subpath());
+    }
+
+    #[test]
+    fn empty_package_name_is_invalid() {
+        let error = GenericPurl::new("type".to_owned(), "").unwrap_err();
+        assert!(matches!(error, ParseError::MissingRequiredField(PurlField::Name)));
     }
 }

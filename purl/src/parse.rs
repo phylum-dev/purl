@@ -180,7 +180,7 @@ where
         // precedence than the path separater.
         let s = match s.split_once('#') {
             Some((s, subpath)) => {
-                parts.subpath = Some(decode_subpath(subpath)?);
+                parts.subpath = decode_subpath(subpath)?;
                 s
             },
             None => s,
@@ -210,7 +210,7 @@ where
         // The namespace is optional so we may not have any more slashes.
         let name_and_version = match s.rsplit_once('/') {
             Some((namespace, s)) => {
-                parts.namespace = Some(decode_namespace(namespace)?);
+                parts.namespace = decode_namespace(namespace)?;
                 s
             },
             None => s,
@@ -219,7 +219,7 @@ where
         match name_and_version.rsplit_once('@') {
             Some((name, version)) => {
                 parts.name = decode(name)?.into();
-                parts.version = Some(decode(version)?.into());
+                parts.version = decode(version)?.into();
             },
             None => {
                 parts.name = decode(name_and_version)?.into();

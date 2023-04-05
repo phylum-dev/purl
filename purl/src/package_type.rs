@@ -223,12 +223,14 @@ impl PurlShape for PackageType {
         match self {
             PackageType::Cargo | PackageType::Gem | PackageType::Npm => {},
             PackageType::Golang => {
-                let Some(namespace) = &mut parts.namespace else { return Err(PackageError::MissingRequiredField(PurlField::Namespace)) };
-                lowercase_in_place(namespace);
+                if parts.namespace.is_empty() {
+                    return Err(PackageError::MissingRequiredField(PurlField::Namespace));
+                }
+                lowercase_in_place(&mut parts.namespace);
                 lowercase_in_place(&mut parts.name);
             },
             PackageType::Maven => {
-                if parts.namespace.is_none() {
+                if parts.namespace.is_empty() {
                     return Err(PackageError::MissingRequiredField(PurlField::Namespace));
                 }
             },
@@ -337,7 +339,7 @@ mod tests {
     #[test]
     fn golang_lowercases_names() {
         let purl = Purl::builder(PackageType::Golang, "Cobra")
-            .with_namespace(Some("GitHub.com/SPF13"))
+            .with_namespace("GitHub.com/SPF13")
             .build()
             .unwrap();
         assert_eq!("pkg:golang/github.com/spf13/cobra", &purl.to_string());

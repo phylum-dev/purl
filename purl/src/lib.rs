@@ -210,15 +210,15 @@ fn str_preview_mut(s: &mut str) -> Result<(), ParseError> {
 #[must_use]
 pub struct PurlParts {
     /// The namespace.
-    pub namespace: Option<SmallString>,
+    pub namespace: SmallString,
     /// The name.
     pub name: SmallString,
     /// The version.
-    pub version: Option<SmallString>,
+    pub version: SmallString,
     /// The qualifiers.
     pub qualifiers: Qualifiers,
     /// The subpath.
-    pub subpath: Option<SmallString>,
+    pub subpath: SmallString,
 }
 
 /// An immutable PURL.
@@ -233,8 +233,7 @@ pub struct PurlParts {
 /// use phylum_purl::{PackageType, Purl};
 ///
 /// // Use the builder if you want to set fields besides the type and name.
-/// let purl =
-///     Purl::builder(PackageType::Npm, "my-package").with_version(Some("1.2.3")).build().unwrap();
+/// let purl = Purl::builder(PackageType::Npm, "my-package").with_version("1.2.3").build().unwrap();
 ///
 /// assert_eq!("pkg:npm/my-package@1.2.3", &purl.to_string());
 /// ```
@@ -285,7 +284,7 @@ impl<T> GenericPurl<T> {
     /// Get the namespace.
     #[must_use]
     pub fn namespace(&self) -> Option<&str> {
-        self.parts.namespace.as_deref()
+        Some(&*self.parts.namespace).filter(|v| !v.is_empty())
     }
 
     /// Get the name.
@@ -297,7 +296,7 @@ impl<T> GenericPurl<T> {
     /// Get the version.
     #[must_use]
     pub fn version(&self) -> Option<&str> {
-        self.parts.version.as_deref()
+        Some(&*self.parts.version).filter(|v| !v.is_empty())
     }
 
     /// Get the qualifiers.
@@ -309,7 +308,7 @@ impl<T> GenericPurl<T> {
     /// Get the subpath.
     #[must_use]
     pub fn subpath(&self) -> Option<&str> {
-        self.parts.subpath.as_deref()
+        Some(&*self.parts.subpath).filter(|v| !v.is_empty())
     }
 
     /// Convert this PURL into a mutable form.
@@ -325,7 +324,10 @@ impl<T> GenericPurl<T> {
 fn is_valid_package_type(package_type: &str) -> bool {
     // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#rules-for-each-purl-component
     const ALLOWED_SPECIAL_CHARS: &[char] = &['.', '+', '-'];
-    package_type.chars().all(|c| c.is_ascii_alphanumeric() || ALLOWED_SPECIAL_CHARS.contains(&c))
+    !package_type.is_empty()
+        && package_type
+            .chars()
+            .all(|c| c.is_ascii_alphanumeric() || ALLOWED_SPECIAL_CHARS.contains(&c))
 }
 
 /// Try to convert a `SmallString` to lowercase without allocating.
@@ -444,9 +446,9 @@ mod tests {
     #[test]
     fn into_builder_build_produces_same_purl() {
         let original = GenericPurlBuilder::new(Cow::Borrowed("type"), "name")
-            .with_namespace(Some("namespace"))
-            .with_subpath(Some("subpath"))
-            .with_version(Some("1.0"))
+            .with_namespace("namespace")
+            .with_subpath("subpath")
+            .with_version("1.0")
             .with_qualifier("key", Some("value"))
             .unwrap()
             .build()
@@ -474,5 +476,29 @@ mod tests {
         let mut lower = SmallString::from("Æ");
         lowercase_in_place(&mut lower);
         assert_eq!("æ", &lower);
+    }
+
+    #[test]
+    fn empty_package_type_is_invalid() {
+        let error = GenericPurl::new(Cow::Borrowed(""), "name").unwrap_err();
+        assert!(matches!(error, ParseError::InvalidPackageType));
+    }
+
+    #[test]
+    fn namespace_when_empty_is_none() {
+        let purl = GenericPurl::new(Cow::Borrowed("type"), "name").unwrap();
+        assert_eq!(None, purl.namespace());
+    }
+
+    #[test]
+    fn version_when_empty_is_none() {
+        let purl = GenericPurl::new(Cow::Borrowed("type"), "name").unwrap();
+        assert_eq!(None, purl.version());
+    }
+
+    #[test]
+    fn subpath_when_empty_is_none() {
+        let purl = GenericPurl::new(Cow::Borrowed("type"), "name").unwrap();
+        assert_eq!(None, purl.subpath());
     }
 }

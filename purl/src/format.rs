@@ -141,7 +141,7 @@ mod tests {
         assert_eq!(
             "pkg:generic/a%23/b%3F/c%40/name",
             &GenericPurlBuilder::new(Cow::Borrowed("generic"), "name")
-                .with_namespace(Some("a#/b?/c@"))
+                .with_namespace("a#/b?/c@")
                 .build()
                 .expect("Could not build PURL")
                 .to_string(),
@@ -164,7 +164,7 @@ mod tests {
         assert_eq!(
             "pkg:generic/name@a%23%2Fb%3F%2Fc%40",
             &GenericPurlBuilder::new(Cow::Borrowed("generic"), "name")
-                .with_version(Some("a#/b?/c@"))
+                .with_version("a#/b?/c@")
                 .build()
                 .expect("Could not build PURL")
                 .to_string(),
@@ -193,7 +193,7 @@ mod tests {
         assert_eq!(
             "pkg:generic/name#a%23/b%3F/c%40",
             &GenericPurlBuilder::new(Cow::Borrowed("generic"), "name")
-                .with_subpath(Some("a#/b?/c@"))
+                .with_subpath("a#/b?/c@")
                 .build()
                 .expect("Could not build PURL")
                 .to_string(),
