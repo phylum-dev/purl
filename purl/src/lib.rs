@@ -223,7 +223,8 @@ pub struct PurlParts {
 
 /// An immutable PURL.
 ///
-/// This type does not directly include any package-type specific behavior.
+/// This type does not directly include any package-type-specific behavior. Any
+/// package-type-specific behavior is added using [`PurlShape`].
 ///
 /// # Example
 ///
