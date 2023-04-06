@@ -8,6 +8,8 @@ use hex::{FromHex, ToHex};
 
 use crate::{copy_as_lowercase, ParseError, SmallString};
 
+pub mod maven;
+
 /// A type that has an associated qualifier key.
 pub trait KnownQualifierKey {
     /// The key of the qualifier.
@@ -59,6 +61,8 @@ macro_rules! str_ref_qualifier {
         }
     };
 }
+// Allow child modules to use this macro.
+use str_ref_qualifier;
 
 str_ref_qualifier!(RepositoryUrl, "repository_url", "repository URL");
 str_ref_qualifier!(DownloadUrl, "download_url", "download URL");
