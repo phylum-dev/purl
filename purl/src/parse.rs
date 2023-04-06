@@ -1,7 +1,6 @@
 //! Support for parsing PURLs.
 
 use std::borrow::Cow;
-use std::cmp::Ordering;
 use std::convert::Infallible;
 use std::fmt::{self, Write};
 use std::str::FromStr;
@@ -263,12 +262,6 @@ fn decode_qualifiers(s: &str, parts: &mut PurlParts) -> Result<(), ParseError> {
                 continue;
             }
 
-            let v = if k.eq_ignore_ascii_case("checksum") {
-                decode_checksums(&v)?
-            } else {
-                SmallString::from(v)
-            };
-
             entry.insert(v);
         } else {
             return Err(ParseError::InvalidQualifier);
@@ -276,47 +269,6 @@ fn decode_qualifiers(s: &str, parts: &mut PurlParts) -> Result<(), ParseError> {
     }
 
     Ok(())
-}
-
-fn decode_checksums(checksums: &str) -> Result<SmallString, ParseError> {
-    struct Checksum<'a> {
-        algorithm: &'a str,
-        bytes: &'a str,
-    }
-
-    let mut parts = Vec::with_capacity(checksums.chars().filter(|c| *c == ',').count() + 1);
-    for hash in checksums.split(',') {
-        let Some((algorithm, bytes)) = hash.rsplit_once(':') else {
-            return Err(ParseError::InvalidQualifier);
-        };
-
-        if bytes.chars().any(|b| !b.is_ascii_hexdigit()) {
-            return Err(ParseError::InvalidQualifier);
-        }
-
-        parts.push(Checksum { algorithm, bytes });
-    }
-
-    fn cmp_uncased(a: &str, b: &str) -> Ordering {
-        a.chars().flat_map(char::to_lowercase).cmp(b.chars().flat_map(char::to_lowercase))
-    }
-
-    parts.sort_unstable_by(|a, b| cmp_uncased(a.algorithm, b.algorithm));
-    if parts.windows(2).any(|w| cmp_uncased(w[0].algorithm, w[1].algorithm).is_eq()) {
-        return Err(ParseError::InvalidQualifier);
-    }
-
-    let mut v = SmallString::new();
-    for Checksum { algorithm, bytes } in parts {
-        if !v.is_empty() {
-            v.push(',');
-        }
-        v.extend(algorithm.chars().flat_map(|c| c.to_lowercase()));
-        v.push(':');
-        v.extend(bytes.chars().map(|c| c.to_ascii_lowercase()));
-    }
-
-    Ok(v)
 }
 
 fn decode_namespace(namespace: &str) -> Result<SmallString, ParseError> {

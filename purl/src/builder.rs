@@ -1,3 +1,4 @@
+use crate::qualifiers::well_known::{Checksum, KnownQualifierKey};
 use crate::{GenericPurl, ParseError, PurlParts, PurlShape, SmallString};
 
 /// A mutable, potentially invalid PURL.
@@ -100,7 +101,6 @@ impl<T> GenericPurlBuilder<T> {
     pub fn with_qualifier<K, V>(mut self, k: K, v: Option<V>) -> Result<Self, ParseError>
     where
         K: AsRef<str>,
-        V: AsRef<str>,
         SmallString: From<K> + From<V>,
     {
         match v {
@@ -109,6 +109,47 @@ impl<T> GenericPurlBuilder<T> {
             },
             None => {
                 self.parts.qualifiers.remove(k);
+            },
+        }
+        Ok(self)
+    }
+
+    /// Set a qualifier.
+    ///
+    /// If `v` is `None`, the qualifier will be unset.
+    pub fn with_typed_qualifier<Q>(mut self, v: Option<Q>) -> Self
+    where
+        Q: KnownQualifierKey,
+        SmallString: From<Q>,
+    {
+        match v {
+            Some(v) => {
+                self.parts.qualifiers.insert_typed(v);
+            },
+            None => {
+                self.parts.qualifiers.remove_typed::<Q>();
+            },
+        }
+        self
+    }
+
+    /// Set a qualifier.
+    ///
+    /// If `v` is `None`, the qualifier will be unset.
+    pub fn try_with_typed_qualifier<Q>(
+        mut self,
+        v: Option<Q>,
+    ) -> Result<Self, <SmallString as TryFrom<Q>>::Error>
+    where
+        Q: KnownQualifierKey,
+        SmallString: TryFrom<Q>,
+    {
+        match v {
+            Some(v) => {
+                self.parts.qualifiers.try_insert_typed(v)?;
+            },
+            None => {
+                self.parts.qualifiers.remove_typed::<Q>();
             },
         }
         Ok(self)
@@ -153,11 +194,19 @@ impl<T> GenericPurlBuilder<T> {
     where
         T: PurlShape,
     {
+        self.package_type.finish(&mut self.parts)?;
+
         if self.parts.name.is_empty() {
             return Err(T::Error::from(ParseError::MissingRequiredField(crate::PurlField::Name)));
         }
 
-        self.package_type.finish(&mut self.parts)?;
+        if let Some(checksum) = self.parts.qualifiers.try_get_typed::<Checksum>()? {
+            // We can't just use `try_insert_typed` because we can't express to the borrow
+            // checker that `Checksum<'a>`'s immutable borrow of `self.parts.qualifiers`
+            // ends in the middle of `try_insert_typed` before the mutable borrow is
+            // required.
+            self.parts.qualifiers.insert(Checksum::KEY, SmallString::try_from(checksum)?)?;
+        }
 
         let GenericPurlBuilder { package_type, parts } = self;
 
@@ -172,6 +221,7 @@ mod tests {
     use maplit::hashmap;
 
     use super::*;
+    use crate::qualifiers::well_known::RepositoryUrl;
     use crate::qualifiers::Qualifiers;
     use crate::PurlField;
 
@@ -287,6 +337,64 @@ mod tests {
         .with_qualifier("ok", None::<&str>)
         .unwrap();
         assert_eq!(hashmap! {}, builder.parts.qualifiers.iter().collect())
+    }
+
+    #[test]
+    fn with_typed_qualifier_with_new_key_and_some_value_sets_qualifier() {
+        let builder =
+            GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
+                .with_typed_qualifier(Some(RepositoryUrl::from("example.com")));
+        assert_eq!(
+            hashmap! { RepositoryUrl::KEY => "example.com" },
+            builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
+        )
+    }
+
+    #[test]
+    fn with_typed_qualifier_with_existing_key_and_none_value_unsets_qualifier() {
+        let builder = GenericPurlBuilder {
+            package_type: "",
+            parts: PurlParts {
+                qualifiers: Qualifiers::try_from_iter([(RepositoryUrl::KEY, "example.com")])
+                    .unwrap(),
+                ..Default::default()
+            },
+        }
+        .with_typed_qualifier(None::<RepositoryUrl>);
+        assert_eq!(
+            hashmap! {},
+            builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
+        )
+    }
+
+    #[test]
+    fn try_with_typed_qualifier_with_new_key_and_some_value_sets_qualifier() {
+        let builder =
+            GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
+                .try_with_typed_qualifier(Some(RepositoryUrl::from("example.com")))
+                .unwrap();
+        assert_eq!(
+            hashmap! { RepositoryUrl::KEY => "example.com" },
+            builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
+        )
+    }
+
+    #[test]
+    fn try_with_typed_qualifier_with_existing_key_and_none_value_unsets_qualifier() {
+        let builder = GenericPurlBuilder {
+            package_type: "",
+            parts: PurlParts {
+                qualifiers: Qualifiers::try_from_iter([(RepositoryUrl::KEY, "example.com")])
+                    .unwrap(),
+                ..Default::default()
+            },
+        }
+        .try_with_typed_qualifier(None::<RepositoryUrl>)
+        .unwrap();
+        assert_eq!(
+            hashmap! {},
+            builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
+        )
     }
 
     #[test]

@@ -5,7 +5,10 @@ use std::marker::PhantomData;
 use std::ops::{Deref, Index, IndexMut};
 use std::{mem, slice};
 
+use self::well_known::KnownQualifierKey;
 use crate::{ParseError, SmallString};
+
+pub mod well_known;
 
 /// A list of qualifiers.
 ///
@@ -105,7 +108,7 @@ impl Qualifiers {
         self.qualifiers.reserve_exact(additional)
     }
 
-    /// Get a qualifier by name.
+    /// Get a qualifier by key.
     ///
     /// If the qualifier is not in the list, `None` is returned.
     pub fn get<K>(&self, key: K) -> Option<&str>
@@ -115,15 +118,36 @@ impl Qualifiers {
         self.get_index(key).map(|i| self.qualifiers[i].1.as_str())
     }
 
+    /// Get a typed qualifier.
+    ///
+    /// If the qualifier is not in the list, `None` is returned.
+    pub fn get_typed<'a, Q>(&'a self) -> Option<Q>
+    where
+        Q: From<&'a str> + KnownQualifierKey,
+    {
+        self.get(Q::KEY).map(Q::from)
+    }
+
+    /// Try to get a typed qualifier.
+    ///
+    /// If the qualifier is not in the list, `Ok(None)` is returned.
+    pub fn try_get_typed<'a, Q>(&'a self) -> Result<Option<Q>, Q::Error>
+    where
+        Q: TryFrom<&'a str> + KnownQualifierKey,
+    {
+        self.get(Q::KEY).map(Q::try_from).transpose()
+    }
+
     fn get_index<K>(&self, key: K) -> Option<usize>
     where
         K: AsRef<str>,
     {
+        // If it's not valid, it has no index.
         let key = check_qualifier_key(key).ok()?;
-        self.search(key).ok()
+        self.search(&key).ok()
     }
 
-    fn search<K>(&self, key: MixedQualifierKey<K>) -> Result<usize, usize>
+    fn search<K>(&self, key: &MixedQualifierKey<K>) -> Result<usize, usize>
     where
         K: AsRef<str>,
     {
@@ -140,7 +164,7 @@ impl Qualifiers {
         K: AsRef<str>,
     {
         let key = check_qualifier_key(key)?;
-        Ok(match self.qualifiers.binary_search_by(|(qk, _qv)| qk.partial_cmp(&key).unwrap()) {
+        Ok(match self.search(&key) {
             Ok(index) => Entry::Occupied(OccupiedEntry {
                 qualifiers: &mut self.qualifiers,
                 index,
@@ -168,33 +192,69 @@ impl Qualifiers {
     where
         K: AsRef<str>,
     {
-        let Ok(key) = check_qualifier_key(key) else {
-            // If it's not valid it's not contained.
-            return false;
-        };
-        self.qualifiers.binary_search_by(|(qk, _qv)| qk.partial_cmp(&key).unwrap()).is_ok()
+        self.get_index(key).is_some()
+    }
+
+    /// Check whether a qualifier with the given name exists.
+    pub fn contains_typed<Q>(&self) -> bool
+    where
+        Q: KnownQualifierKey,
+    {
+        self.contains_key(Q::KEY)
     }
 
     /// Set a qualifier.
     pub fn insert<K, V>(&mut self, key: K, v: V) -> Result<&mut SmallString, ParseError>
     where
         K: AsRef<str>,
-        V: AsRef<str>,
         SmallString: From<K> + From<V>,
     {
         let key = check_qualifier_key(key)?;
-        let index =
-            match self.qualifiers.binary_search_by(|(qk, _qv)| qk.partial_cmp(&key).unwrap()) {
-                Ok(i) => {
-                    self.qualifiers[i].1 = SmallString::from(v);
-                    i
-                },
-                Err(i) => {
-                    self.qualifiers.insert(i, (key.into_key(), SmallString::from(v)));
-                    i
-                },
-            };
+        let index = match self.search(&key) {
+            Ok(i) => {
+                self.qualifiers[i].1 = SmallString::from(v);
+                i
+            },
+            Err(i) => {
+                self.qualifiers.insert(i, (key.into_key(), SmallString::from(v)));
+                i
+            },
+        };
         Ok(&mut self.qualifiers[index].1)
+    }
+
+    /// Set a typed qualifier.
+    ///
+    /// # Panics
+    ///
+    /// This method panics if the [`KnownQualifierKey::KEY`] is not a valid
+    /// qualifier key.
+    pub fn insert_typed<Q>(&mut self, value: Q)
+    where
+        Q: KnownQualifierKey,
+        SmallString: From<Q>,
+    {
+        // Rust 1.68.1 gets confused without this type annotation.
+        self.insert::<&'static str, _>(Q::KEY, value).unwrap();
+    }
+
+    /// Set a typed qualifier.
+    ///
+    /// # Panics
+    ///
+    /// This method panics if the [`KnownQualifierKey::KEY`] is not a valid
+    /// qualifier key.
+    pub fn try_insert_typed<Q>(
+        &mut self,
+        value: Q,
+    ) -> Result<(), <SmallString as TryFrom<Q>>::Error>
+    where
+        Q: KnownQualifierKey,
+        SmallString: TryFrom<Q>,
+    {
+        let value = SmallString::try_from(value)?;
+        self.insert(Q::KEY, value).unwrap();
+        Ok(())
     }
 
     /// Unset a qualifier.
@@ -202,15 +262,19 @@ impl Qualifiers {
     where
         S: AsRef<str>,
     {
-        let Ok(key) = check_qualifier_key(key) else {
-            // If it's not a valid qualifier then we don't need to search for it.
-            return None;
-        };
-        if let Ok(i) = self.qualifiers.binary_search_by(|(qk, _qv)| qk.partial_cmp(&key).unwrap()) {
-            Some(self.qualifiers.remove(i).1)
+        if let Some(index) = self.get_index(key) {
+            Some(self.qualifiers.remove(index).1)
         } else {
             None
         }
+    }
+
+    /// Unset a typed qualifier.
+    pub fn remove_typed<Q>(&mut self)
+    where
+        Q: KnownQualifierKey,
+    {
+        self.remove(Q::KEY);
     }
 
     /// Retain only qualifiers that match the given predicate.
@@ -553,6 +617,7 @@ where
 
 #[cfg(test)]
 mod tests {
+    use super::well_known::Checksum;
     use super::*;
 
     fn a_b_c() -> Qualifiers {
@@ -910,5 +975,49 @@ mod tests {
         assert_eq!(0, qualifiers.len());
         assert!(qualifiers.iter().next().is_none());
         assert!(qualifiers.get("a").is_none());
+    }
+
+    #[test]
+    #[should_panic]
+    fn insert_typed_when_key_is_invalid_panics() {
+        struct Invalid;
+
+        impl KnownQualifierKey for Invalid {
+            const KEY: &'static str = "";
+        }
+
+        impl From<Invalid> for SmallString {
+            fn from(_: Invalid) -> Self {
+                SmallString::from("invalid")
+            }
+        }
+
+        let mut qualifiers = Qualifiers::default();
+        qualifiers.insert_typed(Invalid);
+    }
+
+    #[test]
+    fn try_insert_typed_when_successful_inserts_and_returns_ok() {
+        let mut checksums = Checksum::default();
+        checksums.insert_raw("hash1", "00".to_owned());
+        let mut qualifiers = Qualifiers::default();
+
+        qualifiers.try_insert_typed(checksums).unwrap();
+
+        assert_eq!(1, qualifiers.len());
+        assert_eq!(Some("hash1:00"), qualifiers.get(Checksum::KEY));
+    }
+
+    #[test]
+    fn try_insert_typed_when_unsuccessful_does_insert_and_returns_error() {
+        let mut checksums = Checksum::default();
+        checksums.insert_raw("hash1", "x".to_owned());
+        let mut qualifiers = Qualifiers::try_from_iter([(Checksum::KEY, "hash1:00")]).unwrap();
+
+        let error = qualifiers.try_insert_typed(checksums).unwrap_err();
+
+        assert!(matches!(error, ParseError::InvalidQualifier));
+        assert_eq!(1, qualifiers.len());
+        assert_eq!(Some("hash1:00"), qualifiers.get(Checksum::KEY));
     }
 }

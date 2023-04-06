@@ -359,6 +359,35 @@ fn lowercase_in_place(s: &mut SmallString) {
     }
 }
 
+/// Try to convert a `&str` to a lowercase `SmallString` without allocating.
+fn copy_as_lowercase(s: &str) -> SmallString {
+    enum State {
+        Lower,
+        MixedAscii,
+        MixedUnicode,
+    }
+    let mut state = State::Lower;
+    for c in s.chars() {
+        if c.is_uppercase() {
+            if c.is_ascii() {
+                state = State::MixedAscii;
+            } else {
+                state = State::MixedUnicode;
+                break;
+            }
+        }
+    }
+    match state {
+        State::Lower => SmallString::from(s),
+        State::MixedAscii => {
+            let mut v = SmallString::from(s);
+            v.make_ascii_lowercase();
+            v
+        },
+        State::MixedUnicode => s.chars().flat_map(|c| c.to_lowercase()).collect(),
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -475,6 +504,27 @@ mod tests {
     fn lowercase_in_place_when_upper_unicode_lowercases() {
         let mut lower = SmallString::from("Æ");
         lowercase_in_place(&mut lower);
+        assert_eq!("æ", &lower);
+    }
+
+    #[test]
+    fn copy_as_lowercase_when_lower_does_nothing() {
+        let upper = "a";
+        let lower = copy_as_lowercase(upper);
+        assert_eq!("a", &lower);
+    }
+
+    #[test]
+    fn copy_as_lowercase_when_upper_ascii_lowercases() {
+        let upper = "A";
+        let lower = copy_as_lowercase(upper);
+        assert_eq!("a", &lower);
+    }
+
+    #[test]
+    fn copy_as_lowercase_when_upper_unicode_lowercases() {
+        let upper = "Æ";
+        let lower = copy_as_lowercase(upper);
         assert_eq!("æ", &lower);
     }
 
