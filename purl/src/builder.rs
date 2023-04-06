@@ -97,20 +97,13 @@ impl<T> GenericPurlBuilder<T> {
 
     /// Set a qualifier.
     ///
-    /// If `v` is `None`, the qualifier will be unset.
-    pub fn with_qualifier<K, V>(mut self, k: K, v: Option<V>) -> Result<Self, ParseError>
+    /// If `v` is `""`, the qualifier will be unset.
+    pub fn with_qualifier<K, V>(mut self, k: K, v: V) -> Result<Self, ParseError>
     where
         K: AsRef<str>,
         SmallString: From<K> + From<V>,
     {
-        match v {
-            Some(v) => {
-                self.parts.qualifiers.insert(k, v)?;
-            },
-            None => {
-                self.parts.qualifiers.remove(k);
-            },
-        }
+        self.parts.qualifiers.insert(k, v)?;
         Ok(self)
     }
 
@@ -157,7 +150,7 @@ impl<T> GenericPurlBuilder<T> {
 
     /// Unset a qualifier.
     ///
-    /// This is the same as passing `k, None` to [`Self::with_qualifier`].
+    /// This is the same as passing `k, ""` to [`Self::with_qualifier`].
     pub fn without_qualifier<S>(mut self, k: S) -> Self
     where
         S: AsRef<str>,
@@ -199,6 +192,9 @@ impl<T> GenericPurlBuilder<T> {
         if self.parts.name.is_empty() {
             return Err(T::Error::from(ParseError::MissingRequiredField(crate::PurlField::Name)));
         }
+
+        // Empty qualifiers are the same as unset qualifiers.
+        self.parts.qualifiers.retain(|_, v| !v.is_empty());
 
         if let Some(checksum) = self.parts.qualifiers.try_get_typed::<Checksum>()? {
             // We can't just use `try_insert_typed` because we can't express to the borrow
@@ -271,45 +267,27 @@ mod tests {
     }
 
     #[test]
-    fn with_qualifier_with_new_valid_key_and_some_value_sets_qualifier() {
+    fn with_qualifier_with_new_valid_key_sets_qualifier() {
         let builder =
             GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
-                .with_qualifier("ok", Some(""))
+                .with_qualifier("ok", "value")
                 .unwrap();
         assert_eq!(
-            hashmap! { "ok" => "" },
+            hashmap! { "ok" => "value" },
             builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
         )
     }
 
     #[test]
-    fn with_qualifier_with_new_invalid_key_and_some_value_returns_error() {
+    fn with_qualifier_with_new_invalid_key_returns_error() {
         let result =
             GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
-                .with_qualifier("", Some(""));
+                .with_qualifier("", "");
         assert!(matches!(result, Err(ParseError::InvalidQualifier)));
     }
 
     #[test]
-    fn with_qualifier_with_new_valid_key_and_none_value_does_nothing() {
-        let builder =
-            GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
-                .with_qualifier("ok", None::<&str>)
-                .unwrap();
-        assert_eq!(0, builder.parts.qualifiers.iter().len());
-    }
-
-    #[test]
-    fn with_qualifier_with_new_invalid_key_and_none_value_does_nothing() {
-        let builder =
-            GenericPurlBuilder { package_type: "", parts: PurlParts { ..Default::default() } }
-                .with_qualifier("", None::<&str>)
-                .unwrap();
-        assert_eq!(0, builder.parts.qualifiers.iter().len());
-    }
-
-    #[test]
-    fn with_qualifier_with_existing_key_and_some_value_sets_qualifier() {
+    fn with_qualifier_with_existing_key_sets_qualifier() {
         let builder = GenericPurlBuilder {
             package_type: "",
             parts: PurlParts {
@@ -317,26 +295,12 @@ mod tests {
                 ..Default::default()
             },
         }
-        .with_qualifier("ok", Some("new"))
+        .with_qualifier("ok", "new")
         .unwrap();
         assert_eq!(
             hashmap! { "ok" => "new" },
             builder.parts.qualifiers.iter().map(|(k, v)| (k.as_str(), v)).collect(),
         )
-    }
-
-    #[test]
-    fn with_qualifier_with_existing_key_and_none_value_unsets_qualifier() {
-        let builder = GenericPurlBuilder {
-            package_type: "",
-            parts: PurlParts {
-                qualifiers: Qualifiers::try_from_iter([("ok", "old")]).unwrap(),
-                ..Default::default()
-            },
-        }
-        .with_qualifier("ok", None::<&str>)
-        .unwrap();
-        assert_eq!(hashmap! {}, builder.parts.qualifiers.iter().collect())
     }
 
     #[test]
@@ -433,7 +397,7 @@ mod tests {
             .with_namespace("namespace")
             .with_name("name")
             .with_version("version")
-            .with_qualifier("key", Some("value"))
+            .with_qualifier("key", "value")
             .unwrap()
             .with_subpath("subpath")
             .build()

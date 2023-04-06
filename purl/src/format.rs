@@ -176,11 +176,11 @@ mod tests {
         assert_eq!(
             "pkg:generic/name?a=%23&b=%3F&c=%40",
             &GenericPurlBuilder::new(Cow::Borrowed("generic"), "name")
-                .with_qualifier("a", Some("#"))
+                .with_qualifier("a", "#")
                 .expect("Could not set qualifier a")
-                .with_qualifier("b", Some("?"))
+                .with_qualifier("b", "?")
                 .expect("Could not set qualifier b")
-                .with_qualifier("c", Some("@"))
+                .with_qualifier("c", "@")
                 .expect("Could not set qualifier c")
                 .build()
                 .expect("Could not build PURL")

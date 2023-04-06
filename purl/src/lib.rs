@@ -478,7 +478,7 @@ mod tests {
             .with_namespace("namespace")
             .with_subpath("subpath")
             .with_version("1.0")
-            .with_qualifier("key", Some("value"))
+            .with_qualifier("key", "value")
             .unwrap()
             .build()
             .unwrap();

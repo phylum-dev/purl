@@ -213,7 +213,7 @@ mod tests {
     fn can_get_repository_url() {
         const URL: &str = "docker.io/library/debian";
         let purl = GenericPurl::builder(Cow::Borrowed("oci"), "debian")
-            .with_qualifier("repository_url", Some(URL))
+            .with_qualifier("repository_url", URL)
             .unwrap()
             .build()
             .unwrap();
