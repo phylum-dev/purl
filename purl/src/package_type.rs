@@ -329,7 +329,7 @@ mod tests {
 
     #[test]
     fn golang_requires_namespace() {
-        let error = Purl::new(PackageType::Maven, "invalid").unwrap_err();
+        let error = Purl::new(PackageType::Golang, "invalid").unwrap_err();
         assert!(
             matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),
             "Expected missing namespace error but got {error}",
