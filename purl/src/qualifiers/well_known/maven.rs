@@ -1,4 +1,6 @@
-//! Known qualifier types for Maven.
+//! Known qualifier types for [maven].
+//!
+//! [maven]: https://github.com/package-url/purl-spec/blob/master/PURL-TYPES.rst#maven
 
 use super::str_ref_qualifier;
 

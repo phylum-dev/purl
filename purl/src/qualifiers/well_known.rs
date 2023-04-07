@@ -8,6 +8,7 @@ use hex::{FromHex, ToHex};
 
 use crate::{copy_as_lowercase, ParseError, SmallString};
 
+pub mod gem;
 pub mod maven;
 
 /// A type that has an associated qualifier key.
