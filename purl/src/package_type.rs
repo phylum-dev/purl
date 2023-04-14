@@ -1,6 +1,7 @@
 //! Support for known package types.
 
 use std::borrow::Cow;
+use std::fmt;
 use std::str::FromStr;
 
 use phf::phf_map;
@@ -163,6 +164,12 @@ impl From<PackageType> for &'static str {
 impl AsRef<str> for PackageType {
     fn as_ref(&self) -> &str {
         self.name()
+    }
+}
+
+impl fmt::Display for PackageType {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.write_str(self.name())
     }
 }
 
