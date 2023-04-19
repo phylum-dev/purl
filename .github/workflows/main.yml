@@ -33,7 +33,7 @@ jobs:
 
     - name: Clippy Linting
       # --all-targets means apply to test code too. Without it just applies to application code
-      run: cargo clippy --all-targets -p phylum-purl -- -D warnings
+      run: cargo clippy --all-targets -p purl -- -D warnings
 
     - name: Regenerate test suite
       run: cargo xtask codegen
@@ -42,7 +42,7 @@ jobs:
         git diff --exit-code -- purl_test
 
     - name: Check docs
-      run: RUSTDOCFLAGS="-D warnings" cargo xtask doc -p phylum-purl --no-deps
+      run: RUSTDOCFLAGS="-D warnings" cargo xtask doc -p purl --no-deps
 
   test:
     strategy:

@@ -290,20 +290,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "phylum-purl"
-version = "0.1.0"
-dependencies = [
- "hex",
- "maplit",
- "percent-encoding",
- "phf",
- "serde",
- "smartstring",
- "thiserror",
- "unicase",
-]
-
-[[package]]
 name = "prettyplease"
 version = "0.2.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -323,10 +309,24 @@ dependencies = [
 ]
 
 [[package]]
+name = "purl"
+version = "0.1.0"
+dependencies = [
+ "hex",
+ "maplit",
+ "percent-encoding",
+ "phf",
+ "serde",
+ "smartstring",
+ "thiserror",
+ "unicase",
+]
+
+[[package]]
 name = "purl_test"
 version = "0.1.0"
 dependencies = [
- "phylum-purl",
+ "purl",
 ]
 
 [[package]]
@@ -598,9 +598,9 @@ dependencies = [
  "clap",
  "convert_case",
  "lazy_static",
- "phylum-purl",
  "prettyplease",
  "proc-macro2",
+ "purl",
  "quote",
  "regex",
  "serde",

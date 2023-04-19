@@ -5,8 +5,8 @@ use std::str::FromStr;
 
 use convert_case::{Case, Casing};
 use lazy_static::lazy_static;
-use phylum_purl::PackageType;
 use proc_macro2::TokenStream;
+use purl::PackageType;
 use quote::{format_ident, quote};
 use regex::Regex;
 use serde::Deserialize;
@@ -53,7 +53,7 @@ pub fn main() {
     let suite = parse_quote! {
         use std::collections::HashMap;
         use std::str::FromStr;
-        use phylum_purl::{PackageError, PackageType, Purl};
+        use purl::{PackageError, PackageType, Purl};
 
         #(#tests)*
     };

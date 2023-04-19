@@ -42,7 +42,7 @@ type SmallString = String;
 /// use std::borrow::Cow;
 /// use std::str::FromStr;
 ///
-/// use phylum_purl::{GenericPurl, GenericPurlBuilder, ParseError, PurlParts, PurlShape};
+/// use purl::{GenericPurl, GenericPurlBuilder, ParseError, PurlParts, PurlShape};
 ///
 /// enum MyPackageType {
 ///     Custom,
@@ -230,7 +230,7 @@ pub struct PurlParts {
 ///
 /// ```
 /// // `Purl` is an alias for `GenericPurl<PackageType>`.
-/// use phylum_purl::{PackageType, Purl};
+/// use purl::{PackageType, Purl};
 ///
 /// // Use the builder if you want to set fields besides the type and name.
 /// let purl = Purl::builder(PackageType::Npm, "my-package").with_version("1.2.3").build().unwrap();

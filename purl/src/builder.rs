@@ -11,7 +11,7 @@ use crate::{GenericPurl, ParseError, PurlParts, PurlShape, SmallString};
 ///
 /// ```
 /// // `PurlBuilder` is an alias for `GenericPurlBuilder<PackageType>`.
-/// use phylum_purl::{PackageType, PurlBuilder};
+/// use purl::{PackageType, PurlBuilder};
 ///
 /// // Use the builder if you want to set fields besides the type and name.
 /// let purl = PurlBuilder::new(PackageType::Maven, "my-package")
