@@ -15,6 +15,7 @@ use syn::parse_quote;
 use crate::workspace_dir;
 
 const TEST_SUITE_DATA: &str = include_str!("generate_tests/test-suite-data.json");
+const PHYLUM_TEST_SUITE_DATA: &str = include_str!("generate_tests/phylum-test-suite-data.json");
 const BLACKLIST: &[&str] = &[
     // NuGet package names are not case sensitive. package-url/purl-spec#226
     "nuget names are case sensitive",
@@ -39,11 +40,16 @@ struct Test<'a> {
 }
 
 pub fn main() {
-    let tests: Vec<Test> =
+    let purl_tests: Vec<Test> =
         serde_json::from_str(TEST_SUITE_DATA).expect("Could not read test-suite-data.json");
+    let phylum_tests: Vec<Test> = serde_json::from_str(PHYLUM_TEST_SUITE_DATA)
+        .expect("Could not read phylum-test-suite-data.json");
 
-    let tests =
-        tests.into_iter().filter(|t| !BLACKLIST.contains(&t.description)).map(test_to_tokens);
+    let tests = purl_tests
+        .into_iter()
+        .chain(phylum_tests)
+        .filter(|t| !BLACKLIST.contains(&t.description))
+        .map(test_to_tokens);
     let suite = parse_quote! {
         use std::collections::HashMap;
         use std::str::FromStr;
