@@ -1,5 +1,5 @@
 [package]
-name = "phylum-purl"
+name = "purl"
 version = "0.1.0"
 edition = "2021"
 description = "A Package URL implementation with customizable package types"

@@ -1,7 +1,7 @@
 [PURL] parsing, manipulation, and formatting.
 
 A PURL is an identifier that refers to a software package. For example,
-`pkg:cargo/phylum-purl` refers to this package.
+`pkg:cargo/purl` refers to this package.
 
 This library supports PURLs at two levels:
 
@@ -16,7 +16,7 @@ This library supports PURLs at two levels:
 ```rust
 use std::str::FromStr;
 
-use phylum_purl::GenericPurl;
+use purl::GenericPurl;
 
 # fn main() -> Result<(), Box<dyn std::error::Error>> {
 let purl = GenericPurl::<String>::from_str(

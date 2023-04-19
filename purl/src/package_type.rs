@@ -59,7 +59,7 @@ use crate::{
 /// use std::borrow::Cow;
 /// use std::str::FromStr;
 ///
-/// use phylum_purl::{
+/// use purl::{
 ///     GenericPurl, GenericPurlBuilder, PackageError, PackageType, PurlParts, PurlShape,
 ///     UnsupportedPackageType,
 /// };
@@ -201,7 +201,7 @@ pub enum PackageError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{PackageError, Purl, PurlField};
+    /// use purl::{PackageError, Purl, PurlField};
     ///
     /// assert!(matches!(
     ///     Purl::from_str("pkg:maven/name@version"),

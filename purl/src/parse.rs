@@ -22,7 +22,7 @@ pub enum ParseError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{GenericPurl, ParseError};
+    /// use purl::{GenericPurl, ParseError};
     ///
     /// assert!(matches!(
     ///     GenericPurl::<String>::from_str("http://example.com"),
@@ -38,7 +38,7 @@ pub enum ParseError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{GenericPurl, ParseError, PurlField};
+    /// use purl::{GenericPurl, ParseError, PurlField};
     ///
     /// assert!(matches!(
     ///     GenericPurl::<String>::from_str("pkg:npm"),
@@ -54,7 +54,7 @@ pub enum ParseError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{GenericPurl, ParseError};
+    /// use purl::{GenericPurl, ParseError};
     ///
     /// assert!(matches!(
     ///     // Because the package type was omitted,
@@ -72,7 +72,7 @@ pub enum ParseError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{GenericPurl, ParseError};
+    /// use purl::{GenericPurl, ParseError};
     ///
     /// assert!(matches!(
     ///     GenericPurl::<String>::from_str("pkg:npm/example?="),
@@ -88,7 +88,7 @@ pub enum ParseError {
     /// ```
     /// use std::str::FromStr;
     ///
-    /// use phylum_purl::{GenericPurl, ParseError};
+    /// use purl::{GenericPurl, ParseError};
     ///
     /// assert!(matches!(
     ///     GenericPurl::<String>::from_str("pkg:npm/%80"),

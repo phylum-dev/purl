@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use phylum_purl::{PackageError, PackageType, Purl};
+use purl::{PackageError, PackageType, Purl};
 #[test]
 /// valid maven purl
 fn valid_maven_purl() {

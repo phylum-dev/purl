@@ -75,8 +75,8 @@ str_ref_qualifier!(FileName, "file_name", "file name");
 /// # Example
 ///
 /// ```
-/// use phylum_purl::qualifiers::well_known::Checksum;
-/// use phylum_purl::GenericPurl;
+/// use purl::qualifiers::well_known::Checksum;
+/// use purl::GenericPurl;
 ///
 /// let sha256 =
 ///     hex::decode("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855").unwrap();
