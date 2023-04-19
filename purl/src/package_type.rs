@@ -40,10 +40,15 @@ use crate::{
 ///   have lowercase names, but there are already NPM packages in existance with
 ///   uppercase names and those packages are distinct from other packages that
 ///   have the same name in lowercase. ([package-url/purl-spec#136])
+/// - The PURL spec says that Go package namespaces and names must be lowercase,
+///   but this implementation does not convert them to lowercase. Go modules can
+///   have mixed case names, and mixed case names are distinct.
+///   ([package-url/purl-spec#196])
 ///
 /// [package-url/purl-spec#226]: https://github.com/package-url/purl-spec/issues/226
 /// [package-url/purl-spec#165]: https://github.com/package-url/purl-spec/pull/165
 /// [package-url/purl-spec#136]: https://github.com/package-url/purl-spec/issues/136
+/// [package-url/purl-spec#196]: https://github.com/package-url/purl-spec/pull/196
 ///
 /// # Extending `PackageType`
 ///
@@ -199,7 +204,7 @@ pub enum PackageError {
     /// use phylum_purl::{PackageError, Purl, PurlField};
     ///
     /// assert!(matches!(
-    ///     Purl::from_str("pkg:golang/name@version"),
+    ///     Purl::from_str("pkg:maven/name@version"),
     ///     Err(PackageError::MissingRequiredField(PurlField::Namespace)),
     /// ));
     /// ```
@@ -228,14 +233,7 @@ impl PurlShape for PackageType {
 
     fn finish(&mut self, parts: &mut crate::PurlParts) -> Result<(), Self::Error> {
         match self {
-            PackageType::Cargo | PackageType::Gem | PackageType::Npm => {},
-            PackageType::Golang => {
-                if parts.namespace.is_empty() {
-                    return Err(PackageError::MissingRequiredField(PurlField::Namespace));
-                }
-                lowercase_in_place(&mut parts.namespace);
-                lowercase_in_place(&mut parts.name);
-            },
+            PackageType::Cargo | PackageType::Gem | PackageType::Npm | PackageType::Golang => {},
             PackageType::Maven => {
                 if parts.namespace.is_empty() {
                     return Err(PackageError::MissingRequiredField(PurlField::Namespace));
@@ -281,74 +279,13 @@ mod tests {
     use super::*;
 
     #[test]
-    fn nuget_lowercases_names() {
-        let purl = Purl::new(PackageType::NuGet, "Newtonsoft.Json").unwrap();
-        assert_eq!("pkg:nuget/newtonsoft.json", &purl.to_string());
-    }
-
-    #[test]
-    fn pypi_lowercases_names() {
-        let purl = Purl::new(PackageType::PyPI, "PyTest").unwrap();
-        assert_eq!("pkg:pypi/pytest", &purl.to_string());
-    }
-
-    #[test]
-    fn fix_pypi_name_with_leading() {
-        let mut name = SmallString::from("_-.-_leading");
-        fix_pypi_name(&mut name);
-        assert_eq!("-leading", &name);
-    }
-
-    #[test]
-    fn fix_pypi_name_with_inner() {
-        let mut name = SmallString::from("inner_-.-_inner");
-        fix_pypi_name(&mut name);
-        assert_eq!("inner-inner", &name);
-    }
-
-    #[test]
-    fn fix_pypi_name_with_trailing() {
-        let mut name = SmallString::from("trailing_-.-_");
-        fix_pypi_name(&mut name);
-        assert_eq!("trailing-", &name);
-    }
-
-    #[test]
-    fn cargo_does_not_lowercase_names() {
-        let purl = Purl::new(PackageType::Cargo, "Inflector").unwrap();
-        assert_eq!("pkg:cargo/Inflector", &purl.to_string());
-    }
-
-    #[test]
-    fn npm_does_not_lowercase_names() {
-        let purl = Purl::new(PackageType::Npm, "parseUri").unwrap();
-        assert_eq!("pkg:npm/parseUri", &purl.to_string());
-    }
-
-    #[test]
     fn maven_requires_namespace() {
+        // This is also covered by the test suite, but this one asserts that the correct
+        // error is returned.
         let error = Purl::new(PackageType::Maven, "invalid").unwrap_err();
         assert!(
             matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),
             "Expected missing namespace error but got {error}",
         );
-    }
-
-    #[test]
-    fn golang_requires_namespace() {
-        let error = Purl::new(PackageType::Golang, "invalid").unwrap_err();
-        assert!(
-            matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),
-            "Expected missing namespace error but got {error}",
-        );
-    }
-
-    #[test]
-    fn golang_lowercases_names() {
-        let purl = Purl::builder(PackageType::Golang, "Cobra")
-            .with_namespace("GitHub.com/SPF13")
-            .build()
-            .unwrap();
-        assert_eq!("pkg:golang/github.com/spf13/cobra", &purl.to_string());
     }
 }

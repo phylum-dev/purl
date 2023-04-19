@@ -1,0 +1,110 @@
+[
+  {
+    "description": "valid go purl with uppercase in namespace",
+    "purl": "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2",
+    "canonical_purl": "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2",
+    "type": "golang",
+    "namespace": "github.com/GoogleCloudPlatform/cloud-sql-proxy",
+    "name": "v2",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "valid go purl with uppercase in name",
+    "purl": "pkg:golang/example.com/A",
+    "canonical_purl": "pkg:golang/example.com/A",
+    "type": "golang",
+    "namespace": "example.com",
+    "name": "A",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "valid go purl without namespace",
+    "purl": "pkg:golang/v.io",
+    "canonical_purl": "pkg:golang/v.io",
+    "type": "golang",
+    "namespace": null,
+    "name": "v.io",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "valid npm purl with uppercase in name",
+    "purl": "pkg:npm/parseUri",
+    "canonical_purl": "pkg:npm/parseUri",
+    "type": "npm",
+    "namespace": null,
+    "name": "parseUri",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "valid cargo purl with uppercase in name",
+    "purl": "pkg:cargo/Inflector",
+    "canonical_purl": "pkg:cargo/Inflector",
+    "type": "cargo",
+    "namespace": null,
+    "name": "Inflector",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "non-canonical nuget purl with uppercase in name",
+    "purl": "pkg:nuget/Newtonsoft.Json",
+    "canonical_purl": "pkg:nuget/newtonsoft.json",
+    "type": "nuget",
+    "namespace": null,
+    "name": "newtonsoft.json",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "non-canonical pypi purl with uppercase in name",
+    "purl": "pkg:pypi/PyTest",
+    "canonical_purl": "pkg:pypi/pytest",
+    "type": "pypi",
+    "namespace": null,
+    "name": "pytest",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "non-canonical pypi purl with specials in name",
+    "purl": "pkg:pypi/_-.-_special_-.-_name_-.-_",
+    "canonical_purl": "pkg:pypi/-special-name-",
+    "type": "pypi",
+    "namespace": null,
+    "name": "-special-name-",
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": false
+  },
+  {
+    "description": "invalid maven purl without namespace",
+    "purl": "pkg:maven/invalid",
+    "canonical_purl": null,
+    "type": null,
+    "namespace": null,
+    "name": null,
+    "version": null,
+    "qualifiers": null,
+    "subpath": null,
+    "is_invalid": true
+  }
+]

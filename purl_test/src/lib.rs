@@ -740,3 +740,195 @@ fn unsupported_composer_names_are_not_case_sensitive() {
         "composer"
     );
 }
+#[test]
+/// valid go purl with uppercase in namespace
+fn valid_go_purl_with_uppercase_in_namespace() {
+    let parsed =
+        match Purl::from_str("pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2", error
+                )
+            },
+        };
+    assert_eq!(&PackageType::Golang, parsed.package_type(), "Incorrect package type");
+    assert_eq!(
+        Some("github.com/GoogleCloudPlatform/cloud-sql-proxy"),
+        parsed.namespace(),
+        "Incorrect namespace"
+    );
+    assert_eq!("v2", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
+}
+#[test]
+/// valid go purl with uppercase in name
+fn valid_go_purl_with_uppercase_in_name() {
+    let parsed = match Purl::from_str("pkg:golang/example.com/A") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:golang/example.com/A", error)
+        },
+    };
+    assert_eq!(&PackageType::Golang, parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("example.com"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("A", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:golang/example.com/A", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// valid go purl without namespace
+fn valid_go_purl_without_namespace() {
+    let parsed = match Purl::from_str("pkg:golang/v.io") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:golang/v.io", error)
+        },
+    };
+    assert_eq!(&PackageType::Golang, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("v.io", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:golang/v.io", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// valid npm purl with uppercase in name
+fn valid_npm_purl_with_uppercase_in_name() {
+    let parsed = match Purl::from_str("pkg:npm/parseUri") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:npm/parseUri", error)
+        },
+    };
+    assert_eq!(&PackageType::Npm, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("parseUri", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:npm/parseUri", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// valid cargo purl with uppercase in name
+fn valid_cargo_purl_with_uppercase_in_name() {
+    let parsed = match Purl::from_str("pkg:cargo/Inflector") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:cargo/Inflector", error)
+        },
+    };
+    assert_eq!(&PackageType::Cargo, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("Inflector", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:cargo/Inflector", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// non-canonical nuget purl with uppercase in name
+fn non_canonical_nuget_purl_with_uppercase_in_name() {
+    let parsed = match Purl::from_str("pkg:nuget/Newtonsoft.Json") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:nuget/Newtonsoft.Json", error)
+        },
+    };
+    assert_eq!(&PackageType::NuGet, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("newtonsoft.json", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:nuget/newtonsoft.json", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// non-canonical pypi purl with uppercase in name
+fn non_canonical_pypi_purl_with_uppercase_in_name() {
+    let parsed = match Purl::from_str("pkg:pypi/PyTest") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:pypi/PyTest", error)
+        },
+    };
+    assert_eq!(&PackageType::PyPI, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("pytest", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:pypi/pytest", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// non-canonical pypi purl with specials in name
+fn non_canonical_pypi_purl_with_specials_in_name() {
+    let parsed = match Purl::from_str("pkg:pypi/_-.-_special_-.-_name_-.-_") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:pypi/_-.-_special_-.-_name_-.-_", error
+            )
+        },
+    };
+    assert_eq!(&PackageType::PyPI, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("-special-name-", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:pypi/-special-name-", &parsed.to_string(), "Incorrect string representation");
+}
+#[test]
+/// invalid maven purl without namespace
+fn invalid_maven_purl_without_namespace() {
+    assert!(
+        Purl::from_str("pkg:maven/invalid").is_err(),
+        "{}",
+        "invalid maven purl without namespace"
+    );
+}
