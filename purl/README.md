@@ -10,6 +10,10 @@ This library supports PURLs at two levels:
 
 [PURL]: https://github.com/package-url/purl-spec
 [package-url/purl-spec#38]: https://github.com/package-url/purl-spec/issues/38
+[`GenericPurl`]: https://docs.rs/purl/0.1/purl/struct.GenericPurl.html
+[`Purl`]: https://docs.rs/purl/0.1/purl/type.Purl.html
+[`PackageType`]: https://docs.rs/purl/0.1/purl/enum.PackageType.html
+[`PurlShape`]: https://docs.rs/purl/0.1/purl/trait.PurlShape.html
 
 # Example
 
