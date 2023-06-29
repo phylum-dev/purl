@@ -2,7 +2,9 @@
 //! [`super::Qualifiers::insert_typed`].
 
 use std::borrow::Cow;
+use std::collections::hash_map::Iter as HashMapIter;
 use std::collections::HashMap;
+use std::ops::Deref;
 
 use hex::{FromHex, ToHex};
 
@@ -159,7 +161,7 @@ impl<'a> Checksum<'a> {
     ///
     /// To decode the value into bytes, use [`Self::get`].
     pub fn get_raw<'b>(&'b self, algorithm: &str) -> Option<&'b str> {
-        self.algorithms.get(algorithm).map(|v| &**v)
+        self.get_value(algorithm).map(|v| v.raw())
     }
 
     /// Get the value of a hash as type `T`.
@@ -169,7 +171,12 @@ impl<'a> Checksum<'a> {
     where
         T: FromHex,
     {
-        self.get_raw(algorithm).map(T::from_hex).transpose()
+        self.get_value(algorithm).map(|v| v.decode()).transpose()
+    }
+
+    /// Get the value of a hash as [`ChecksumValue`].
+    pub fn get_value<'b>(&'b self, algorithm: &str) -> Option<ChecksumValue<'b>> {
+        self.algorithms.get(algorithm).map(|v| ChecksumValue(v))
     }
 
     /// Get an iterator over all the algorithm names.
@@ -204,6 +211,67 @@ impl<'a> Checksum<'a> {
     /// Remove a hash.
     pub fn remove(&mut self, algorithm: &str) {
         self.algorithms.remove(algorithm);
+    }
+
+    /// Iterate over the hashes.
+    ///
+    /// Hashes are returned in no particular order.
+    pub fn iter(&self) -> ChecksumIter {
+        ChecksumIter(self.algorithms.iter())
+    }
+}
+
+impl<'a> IntoIterator for &'a Checksum<'a> {
+    type IntoIter = ChecksumIter<'a>;
+    type Item = (&'a str, ChecksumValue<'a>);
+
+    fn into_iter(self) -> Self::IntoIter {
+        ChecksumIter(self.algorithms.iter())
+    }
+}
+
+/// An iterator over the hash algorithm names and values in a [`Checksum`]
+/// qualifier.
+#[derive(Debug)]
+pub struct ChecksumIter<'a>(HashMapIter<'a, SmallString, Cow<'a, str>>);
+
+/// A hash value in a [`Checksum`] qualifier.
+#[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, PartialOrd, Ord)]
+pub struct ChecksumValue<'a>(&'a str);
+
+impl<'a> ChecksumValue<'a> {
+    /// Get a reference to the (potentially invalid) hex bytes.
+    ///
+    /// To decode the value into bytes, use [`Self::decode`].
+    pub fn raw(&self) -> &'a str {
+        self.0
+    }
+
+    /// Get the value as type `T`.
+    ///
+    /// To get the hex bytes, use [`Self::raw`].
+    pub fn decode<T>(&self) -> Result<T, T::Error>
+    where
+        T: FromHex,
+    {
+        T::from_hex(self.0)
+    }
+}
+
+impl<'a> Deref for ChecksumValue<'a> {
+    type Target = str;
+
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+impl<'a> Iterator for ChecksumIter<'a> {
+    type Item = (&'a str, ChecksumValue<'a>);
+
+    fn next(&mut self) -> Option<Self::Item> {
+        let (k, v) = self.0.next()?;
+        Some((k, ChecksumValue(v)))
     }
 }
 
@@ -253,7 +321,7 @@ mod tests {
         use super::*;
 
         #[test]
-        fn get_raw_gets_when_set_gets_whatever_value() {
+        fn get_raw_when_set_gets_whatever_value() {
             let checksums = Checksum {
                 algorithms: hashmap! {
                     SmallString::from("hash1") => Cow::Borrowed("x"),
@@ -263,9 +331,16 @@ mod tests {
         }
 
         #[test]
-        fn get_raw_gets_when_unset_returns_none() {
+        fn get_raw_when_unset_returns_none() {
             let checksums = Checksum::default();
             assert_eq!(None, checksums.get_raw("hash1"));
+        }
+
+        #[test]
+        fn decode_when_invalid_returns_error() {
+            let value = ChecksumValue("xx");
+            let error = value.decode::<Vec<u8>>().unwrap_err();
+            assert_eq!(FromHexError::InvalidHexCharacter { c: 'x', index: 0 }, error);
         }
 
         #[test]
@@ -422,6 +497,22 @@ mod tests {
             let actual = SmallString::try_from(checksums).unwrap();
 
             assert_eq!(expected, actual);
+        }
+
+        #[test]
+        fn iter_iterates_entries() {
+            let checksums = Checksum {
+                algorithms: hashmap! {
+                    SmallString::from("hash1") => Cow::Borrowed("01"),
+                    SmallString::from("hash2") => Cow::Borrowed("02"),
+                },
+            };
+            let mut entries: Vec<_> = checksums.iter().collect();
+            entries.sort_unstable_by_key(|(k, _)| *k);
+            assert_eq!(
+                [("hash1", ChecksumValue("01")), ("hash2", ChecksumValue("02"))].as_slice(),
+                entries.as_slice(),
+            );
         }
     }
 }
