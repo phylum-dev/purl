@@ -10,11 +10,10 @@ use crate::{GenericPurl, ParseError, PurlParts, PurlShape, SmallString};
 /// # Example
 ///
 /// ```
-/// // `PurlBuilder` is an alias for `GenericPurlBuilder<PackageType>`.
-/// use purl::{PackageType, PurlBuilder};
+/// use purl::GenericPurlBuilder;
 ///
 /// // Use the builder if you want to set fields besides the type and name.
-/// let purl = PurlBuilder::new(PackageType::Maven, "my-package")
+/// let purl = GenericPurlBuilder::new(String::from("maven"), "my-package")
 ///     .with_namespace("my.company")
 ///     .build()
 ///     .unwrap();

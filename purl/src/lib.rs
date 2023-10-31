@@ -231,11 +231,13 @@ pub struct PurlParts {
 /// # Example
 ///
 /// ```
-/// // `Purl` is an alias for `GenericPurl<PackageType>`.
-/// use purl::{PackageType, Purl};
+/// use purl::GenericPurl;
 ///
 /// // Use the builder if you want to set fields besides the type and name.
-/// let purl = Purl::builder(PackageType::Npm, "my-package").with_version("1.2.3").build().unwrap();
+/// let purl = GenericPurl::builder(String::from("npm"), "my-package")
+///     .with_version("1.2.3")
+///     .build()
+///     .unwrap();
 ///
 /// assert_eq!("pkg:npm/my-package@1.2.3", &purl.to_string());
 /// ```
