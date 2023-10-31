@@ -50,13 +50,13 @@ jobs:
         include:
           - name: Minimal
             runner: test
-            features: --no-default-features
+            args: -p purl --no-default-features
           - name: Default
             runner: test
-            features: ""
+            args: -p purl
           - name: Full
             runner: tarpaulin
-            features: --all-features
+            args: --all-features
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -73,4 +73,4 @@ jobs:
         rm tarpaulin.tar.gz
 
     - name: Run tests
-      run: cargo ${{ matrix.runner }} ${{ matrix.features }}
+      run: cargo ${{ matrix.runner }} ${{ matrix.args }}
