@@ -9,6 +9,7 @@ pub use format::*;
 pub use package_type::*;
 pub use parse::*;
 pub use qualifiers::Qualifiers;
+#[cfg(feature = "smartstring")]
 use smartstring::{LazyCompact, SmartString, SmartStringMode};
 
 mod builder;
@@ -181,6 +182,7 @@ impl<'a> PurlShape for Cow<'a, str> {
 /// Without type-specific functionality, it's possible to create PURLs that have
 /// incorrect capitalization or are missing a required namespace or required
 /// qualifiers.
+#[cfg(feature = "smartstring")]
 impl<M> PurlShape for SmartString<M>
 where
     M: SmartStringMode,
@@ -229,11 +231,13 @@ pub struct PurlParts {
 /// # Example
 ///
 /// ```
-/// // `Purl` is an alias for `GenericPurl<PackageType>`.
-/// use purl::{PackageType, Purl};
+/// use purl::GenericPurl;
 ///
 /// // Use the builder if you want to set fields besides the type and name.
-/// let purl = Purl::builder(PackageType::Npm, "my-package").with_version("1.2.3").build().unwrap();
+/// let purl = GenericPurl::builder(String::from("npm"), "my-package")
+///     .with_version("1.2.3")
+///     .build()
+///     .unwrap();
 ///
 /// assert_eq!("pkg:npm/my-package@1.2.3", &purl.to_string());
 /// ```
