@@ -106,5 +106,19 @@
     "qualifiers": null,
     "subpath": null,
     "is_invalid": true
+  },
+  {
+    "description": "plus signs and spaces",
+    "purl": "pkg:cargo/example?repository_url=https://example.com/a%20b+c/",
+    "canonical_purl": "pkg:cargo/example?repository_url=https://example.com/a%20b%2Bc/",
+    "type": "cargo",
+    "namespace": null,
+    "name": "example",
+    "version": null,
+    "qualifiers": {
+      "repository_url": "https://example.com/a b+c/"
+    },
+    "subpath": null,
+    "is_invalid": false
   }
 ]

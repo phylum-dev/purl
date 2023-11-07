@@ -932,3 +932,33 @@ fn invalid_maven_purl_without_namespace() {
         "invalid maven purl without namespace"
     );
 }
+#[test]
+/// plus signs and spaces
+fn plus_signs_and_spaces() {
+    let parsed =
+        match Purl::from_str("pkg:cargo/example?repository_url=https://example.com/a%20b+c/") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:cargo/example?repository_url=https://example.com/a%20b+c/", error
+                )
+            },
+        };
+    assert_eq!(&PackageType::Cargo, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("example", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("repository_url", "https://example.com/a b+c/")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:cargo/example?repository_url=https://example.com/a%20b%2Bc/",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
+}
