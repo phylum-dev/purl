@@ -120,5 +120,19 @@
     },
     "subpath": null,
     "is_invalid": false
+  },
+  {
+    "description": "percent signs",
+    "purl": "pkg:generic/%40100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+    "canonical_purl": "pkg:generic/%40100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+    "type": "generic",
+    "namespace": "@100%",
+    "name": "100%",
+    "version": "100%",
+    "qualifiers": {
+      "repository_url": "https://example.com/100%25/"
+    },
+    "subpath": "100%",
+    "is_invalid": false
   }
 ]
