@@ -19,6 +19,12 @@ const PHYLUM_TEST_SUITE_DATA: &str = include_str!("generate_tests/phylum-test-su
 const BLACKLIST: &[&str] = &[
     // NuGet package names are not case sensitive. package-url/purl-spec#226
     "nuget names are case sensitive",
+    // These tests fail because we don't support type-specific rules for these types.
+    "bitbucket namespace and name should be lowercased",
+    "composer names are not case sensitive",
+    "github namespace and name should be lowercased",
+    "Hugging Face model with various cases",
+    "MLflow model tracked in Azure Databricks (case insensitive)",
 ];
 
 lazy_static! {
@@ -53,7 +59,7 @@ pub fn main() {
     let suite = parse_quote! {
         use std::collections::HashMap;
         use std::str::FromStr;
-        use purl::{PackageError, PackageType, Purl};
+        use purl::{GenericPurl, PackageError, PackageType, Purl};
 
         #(#tests)*
     };
@@ -98,45 +104,66 @@ fn test_to_tokens(test: Test) -> Option<TokenStream> {
                 assert!(Purl::from_str(#purl).is_err(), "{}", #description);
             }
         }
-    } else if let Some(parsed_type) = parsed_type {
-        let parsed_type = type_to_tokens(parsed_type);
+    } else {
         let name = name.expect("Valid test must have package name");
         let namespace = option_to_tokens(namespace);
         let version = option_to_tokens(version);
         let subpath = option_to_tokens(subpath);
         let qualifiers = qualifiers_to_tokens(qualifiers);
 
-        quote! {
-            #[test]
-            #[doc = #description]
-            fn #test_name() {
-                let parsed = match Purl::from_str(#purl) {
-                    Ok(purl) => purl,
-                    Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
-                };
+        if let Some(parsed_type) = parsed_type {
+            let parsed_type = type_to_tokens(parsed_type);
+            quote! {
+                #[test]
+                #[doc = #description]
+                fn #test_name() {
+                    let parsed = match Purl::from_str(#purl) {
+                        Ok(purl) => purl,
+                        Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
+                    };
 
-                assert_eq!(&#parsed_type, parsed.package_type(), "Incorrect package type");
-                assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
-                assert_eq!(#name, parsed.name(), "Incorrect name");
-                assert_eq!(#version, parsed.version(), "Incorrect version");
-                assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
+                    assert_eq!(&#parsed_type, parsed.package_type(), "Incorrect package type");
+                    assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
+                    assert_eq!(#name, parsed.name(), "Incorrect name");
+                    assert_eq!(#version, parsed.version(), "Incorrect version");
+                    assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
 
-                let expected_qualifiers: HashMap<&str, &str> = #qualifiers;
-                assert_eq!(expected_qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>());
+                    let expected_qualifiers: HashMap<&str, &str> = #qualifiers;
+                    assert_eq!(expected_qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>());
 
-                assert_eq!(#canonical_purl, &parsed.to_string(), "Incorrect string representation");
+                    assert_eq!(#canonical_purl, &parsed.to_string(), "Incorrect string representation");
+                }
             }
-        }
-    } else {
-        // For all the unsupported cases, we can at least ensure that we get the
-        // expected error.
-        let test_name = format_ident!("unsupported_{}", test_name);
-        let description = format!("unsupported: {}", description);
-        quote! {
-            #[test]
-            #[doc = #description]
-            fn #test_name() {
-                assert!(matches!(Purl::from_str(#purl), Err(PackageError::UnsupportedType)), "Type {} is not supported", #r#type);
+        } else {
+            // For all the unsupported cases, we can still verify the ability to handle them
+            // without type-specific rules.
+            let test_name = format_ident!("unsupported_{}", test_name);
+            let description = format!("unsupported: {}", description);
+            quote! {
+                #[test]
+                #[doc = #description]
+                fn #test_name() {
+                    // Purl (GenericPurl<PackageType>) should return an error.
+                    assert!(matches!(Purl::from_str(#purl), Err(PackageError::UnsupportedType)), "Type {} is not supported", #r#type);
+
+                    // This should succeed for valid PURLs.
+                    let parsed = match GenericPurl::<String>::from_str(#purl) {
+                        Ok(purl) => purl,
+                        Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
+                    };
+
+                    // These values may not be in the expected form because type-specific rules are not applied.
+                    assert_eq!(#r#type, parsed.package_type(), "Incorrect package type");
+                    assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
+                    assert_eq!(#name, parsed.name(), "Incorrect name");
+                    assert_eq!(#version, parsed.version(), "Incorrect version");
+                    assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
+
+                    let expected_qualifiers: HashMap<&str, &str> = #qualifiers;
+                    assert_eq!(expected_qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>());
+
+                    assert_eq!(#canonical_purl, &parsed.to_string(), "Incorrect string representation");
+                }
             }
         }
     })

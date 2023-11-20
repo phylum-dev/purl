@@ -20,7 +20,9 @@ const PATH: &AsciiSet = &QUERY.add(b'?').add(b'`').add(b'{').add(b'}');
 // be escaped except when used as a separator.
 const PURL_PATH: &AsciiSet = &PATH.add(b'@').add(b'?').add(b'#');
 const PURL_PATH_SEGMENT: &AsciiSet = &PURL_PATH.add(b'/');
-const PURL_QUERY: &AsciiSet = &QUERY.add(b'@').add(b'?').add(b'#');
+// For compatibility with PURL implementations that treat qualifiers as
+// form-urlencoded, escape '+' as well.
+const PURL_QUERY: &AsciiSet = &QUERY.add(b'@').add(b'?').add(b'#').add(b'+');
 const PURL_FRAGMENT: &AsciiSet = &FRAGMENT.add(b'@').add(b'?').add(b'#');
 
 impl<T> fmt::Display for GenericPurl<T>

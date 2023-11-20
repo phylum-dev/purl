@@ -5,7 +5,7 @@
 use std::collections::HashMap;
 use std::str::FromStr;
 
-use purl::{PackageError, PackageType, Purl};
+use purl::{GenericPurl, PackageError, PackageType, Purl};
 #[test]
 /// valid maven purl
 fn valid_maven_purl() {
@@ -120,30 +120,6 @@ fn valid_go_purl_with_version_and_subpath() {
     );
 }
 #[test]
-/// unsupported: bitbucket namespace and name should be lowercased
-fn unsupported_bitbucket_namespace_and_name_should_be_lowercased() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:bitbucket/birKenfeld/pyGments-main@244fd47e07d1014f0aed9c"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "bitbucket"
-    );
-}
-#[test]
-/// unsupported: github namespace and name should be lowercased
-fn unsupported_github_namespace_and_name_should_be_lowercased() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:github/Package-url/purl-Spec@244fd47e07d1004f0aed9c"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "github"
-    );
-}
-#[test]
 /// unsupported: debian can use qualifiers
 fn unsupported_debian_can_use_qualifiers() {
     assert!(
@@ -153,6 +129,33 @@ fn unsupported_debian_can_use_qualifiers() {
         ),
         "Type {} is not supported",
         "deb"
+    );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie", error
+            )
+        },
+    };
+    assert_eq!("deb", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("debian"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("curl", parsed.name(), "Incorrect name");
+    assert_eq!(Some("7.50.3-1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("arch", "i386"), ("distro", "jessie")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie",
+        &parsed.to_string(),
+        "Incorrect string representation"
     );
 }
 #[test]
@@ -168,6 +171,35 @@ fn unsupported_docker_uses_qualifiers_and_hash_image_id_as_versions() {
         ),
         "Type {} is not supported",
         "docker"
+    );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.io",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.\
+                 io",
+                error
+            )
+        },
+    };
+    assert_eq!("docker", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("customer"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("dockerimage", parsed.name(), "Incorrect name");
+    assert_eq!(Some("sha256:244fd47e07d1004f0aed9c"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("repository_url", "gcr.io")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.io",
+        &parsed.to_string(),
+        "Incorrect string representation"
     );
 }
 #[test]
@@ -368,6 +400,33 @@ fn unsupported_rpm_often_use_qualifiers() {
         "Type {} is not supported",
         "rpm"
     );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25", error
+            )
+        },
+    };
+    assert_eq!("rpm", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("fedora"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("curl", parsed.name(), "Incorrect name");
+    assert_eq!(Some("7.50.3-1.fc25"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("arch", "i386"), ("distro", "fedora-25")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:rpm/fedora/curl@7.50.3-1.fc25?arch=i386&distro=fedora-25",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
 }
 #[test]
 /// a scheme is always required
@@ -547,6 +606,23 @@ fn unsupported_valid_conan_purl() {
         "Type {} is not supported",
         "conan"
     );
+    let parsed = match GenericPurl::<String>::from_str("pkg:conan/cctz@2.3") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:conan/cctz@2.3", error)
+        },
+    };
+    assert_eq!("conan", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("cctz", parsed.name(), "Incorrect name");
+    assert_eq!(Some("2.3"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:conan/cctz@2.3", &parsed.to_string(), "Incorrect string representation");
 }
 #[test]
 /// unsupported: valid conan purl with namespace and qualifier channel
@@ -558,6 +634,31 @@ fn unsupported_valid_conan_purl_with_namespace_and_qualifier_channel() {
         ),
         "Type {} is not supported",
         "conan"
+    );
+    let parsed =
+        match GenericPurl::<String>::from_str("pkg:conan/bincrafters/cctz@2.3?channel=stable") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:conan/bincrafters/cctz@2.3?channel=stable", error
+                )
+            },
+        };
+    assert_eq!("conan", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("bincrafters"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("cctz", parsed.name(), "Incorrect name");
+    assert_eq!(Some("2.3"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = [("channel", "stable")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:conan/bincrafters/cctz@2.3?channel=stable",
+        &parsed.to_string(),
+        "Incorrect string representation"
     );
 }
 #[test]
@@ -592,6 +693,41 @@ fn unsupported_valid_conda_purl_with_qualifiers() {
         "Type {} is not supported",
         "conda"
     );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&type=tar.bz2",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&\
+                 type=tar.bz2",
+                error
+            )
+        },
+    };
+    assert_eq!("conda", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("absl-py", parsed.name(), "Incorrect name");
+    assert_eq!(Some("0.4.1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = [
+        ("build", "py36h06a4308_0"),
+        ("channel", "main"),
+        ("subdir", "linux-64"),
+        ("type", "tar.bz2"),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&type=tar.bz2",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
 }
 #[test]
 /// unsupported: valid cran purl
@@ -601,6 +737,23 @@ fn unsupported_valid_cran_purl() {
         "Type {} is not supported",
         "cran"
     );
+    let parsed = match GenericPurl::<String>::from_str("pkg:cran/A3@0.9.1") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:cran/A3@0.9.1", error)
+        },
+    };
+    assert_eq!("cran", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("A3", parsed.name(), "Incorrect name");
+    assert_eq!(Some("0.9.1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!("pkg:cran/A3@0.9.1", &parsed.to_string(), "Incorrect string representation");
 }
 #[test]
 /// invalid cran purl without name
@@ -622,6 +775,31 @@ fn unsupported_valid_swift_purl() {
         ),
         "Type {} is not supported",
         "swift"
+    );
+    let parsed =
+        match GenericPurl::<String>::from_str("pkg:swift/github.com/Alamofire/Alamofire@5.4.3") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:swift/github.com/Alamofire/Alamofire@5.4.3", error
+                )
+            },
+        };
+    assert_eq!("swift", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("github.com/Alamofire"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("Alamofire", parsed.name(), "Incorrect name");
+    assert_eq!(Some("5.4.3"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:swift/github.com/Alamofire/Alamofire@5.4.3",
+        &parsed.to_string(),
+        "Incorrect string representation"
     );
 }
 #[test]
@@ -662,6 +840,27 @@ fn unsupported_valid_hackage_purl() {
         "Type {} is not supported",
         "hackage"
     );
+    let parsed = match GenericPurl::<String>::from_str("pkg:hackage/AC-HalfInteger@1.2.1") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:hackage/AC-HalfInteger@1.2.1", error)
+        },
+    };
+    assert_eq!("hackage", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("AC-HalfInteger", parsed.name(), "Incorrect name");
+    assert_eq!(Some("1.2.1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:hackage/AC-HalfInteger@1.2.1",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
 }
 #[test]
 /// name and version are always required
@@ -681,6 +880,37 @@ fn unsupported_minimal_hugging_face_model() {
         "Type {} is not supported",
         "huggingface"
     );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
+                error
+            )
+        },
+    };
+    assert_eq!("huggingface", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("distilbert-base-uncased", parsed.name(), "Incorrect name");
+    assert_eq!(
+        Some("043235d6088ecd3dd5fb5ca3592b6913fd516027"),
+        parsed.version(),
+        "Incorrect version"
+    );
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
 }
 #[test]
 /// unsupported: Hugging Face model with staging endpoint
@@ -689,27 +919,38 @@ fn unsupported_hugging_face_model_with_staging_endpoint() {
         matches!(Purl::from_str("pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co"),
         Err(PackageError::UnsupportedType)), "Type {} is not supported", "huggingface"
     );
-}
-#[test]
-/// unsupported: Hugging Face model with various cases
-fn unsupported_hugging_face_model_with_various_cases() {
-    assert!(
-        matches!(
-            Purl::from_str(
-                "pkg:huggingface/EleutherAI/gpt-neo-1.3B@797174552AE47F449AB70B684CABCB6603E5E85E"
-            ),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "huggingface"
+    let parsed = match GenericPurl::<
+        String,
+    >::from_str(
+        "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+                error
+            )
+        }
+    };
+    assert_eq!("huggingface", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("microsoft"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("deberta-v3-base", parsed.name(), "Incorrect name");
+    assert_eq!(
+        Some("559062ad13d311b87b2c455e67dcd5f1c8f65111"),
+        parsed.version(),
+        "Incorrect version"
     );
-}
-#[test]
-/// unsupported: MLflow model tracked in Azure Databricks (case insensitive)
-fn unsupported_m_lflow_model_tracked_in_azure_databricks_case_insensitive_() {
-    assert!(
-        matches!(Purl::from_str("pkg:mlflow/CreditFraud@3?repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
-        Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("repository_url", "https://hub-ci.huggingface.co")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+        & parsed.to_string(), "Incorrect string representation"
     );
 }
 #[test]
@@ -719,6 +960,41 @@ fn unsupported_m_lflow_model_tracked_in_azure_ml_case_sensitive_() {
         matches!(Purl::from_str("pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace"),
         Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
     );
+    let parsed = match GenericPurl::<
+        String,
+    >::from_str(
+        "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+                error
+            )
+        }
+    };
+    assert_eq!("mlflow", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("CreditFraud", parsed.name(), "Incorrect name");
+    assert_eq!(Some("3"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = [
+        (
+            "repository_url",
+            "https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+        ),
+    ]
+        .into_iter()
+        .collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+        & parsed.to_string(), "Incorrect string representation"
+    );
 }
 #[test]
 /// unsupported: MLflow model with unique identifiers
@@ -727,17 +1003,39 @@ fn unsupported_m_lflow_model_with_unique_identifiers() {
         matches!(Purl::from_str("pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
         Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
     );
-}
-#[test]
-/// unsupported: composer names are not case sensitive
-fn unsupported_composer_names_are_not_case_sensitive() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:composer/Laravel/Laravel@5.5.0"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "composer"
+    let parsed = match GenericPurl::<
+        String,
+    >::from_str(
+        "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+                error
+            )
+        }
+    };
+    assert_eq!("mlflow", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("trafficsigns", parsed.name(), "Incorrect name");
+    assert_eq!(Some("10"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = [
+        ("model_uuid", "36233173b22f4c89b451f1228d700d49"),
+        ("repository_url", "https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
+        ("run_id", "410a3121-2709-4f88-98dd-dba0ef056b0a"),
+    ]
+    .into_iter()
+    .collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a",
+        & parsed.to_string(), "Incorrect string representation"
     );
 }
 #[test]
@@ -930,5 +1228,35 @@ fn invalid_maven_purl_without_namespace() {
         Purl::from_str("pkg:maven/invalid").is_err(),
         "{}",
         "invalid maven purl without namespace"
+    );
+}
+#[test]
+/// plus signs and spaces
+fn plus_signs_and_spaces() {
+    let parsed =
+        match Purl::from_str("pkg:cargo/example?repository_url=https://example.com/a%20b+c/") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:cargo/example?repository_url=https://example.com/a%20b+c/", error
+                )
+            },
+        };
+    assert_eq!(&PackageType::Cargo, parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("example", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("repository_url", "https://example.com/a b+c/")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:cargo/example?repository_url=https://example.com/a%20b%2Bc/",
+        &parsed.to_string(),
+        "Incorrect string representation"
     );
 }

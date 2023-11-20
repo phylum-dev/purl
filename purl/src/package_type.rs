@@ -44,6 +44,18 @@ use crate::{
 ///   but this implementation does not convert them to lowercase. Go modules can
 ///   have mixed case names, and mixed case names are distinct.
 ///   ([package-url/purl-spec#196])
+/// - Some implementations treat '+' in qualifiers as '+' and some
+///   implementations treat '+' as ' '. This implementation treats '+' as '+'
+///   because there is nothing in the spec that says they should be ' '.
+///   However, even though the spec never references x-www-form-urlencoded,
+///   qualifiers look like x-www-form-urlencoded, and in x-www-form-urlencoded,
+///   '+' means ' '. For compatibility with other implementations, this
+///   implementation escapes '+' as %2B in qualifiers, avoiding ambiguous
+///   parsing at the cost of making the PURL more difficult for humans to read.
+///   Some implementations also convert '+' to ' ' in other parts of the PURL,
+///   including in version numbers where they can be common, but this
+///   implementation does not escape '+' there because that is an implementation
+///   error, not a spec ambiguity.
 ///
 /// [package-url/purl-spec#226]: https://github.com/package-url/purl-spec/issues/226
 /// [package-url/purl-spec#165]: https://github.com/package-url/purl-spec/pull/165
