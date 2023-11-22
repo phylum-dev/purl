@@ -1260,3 +1260,39 @@ fn plus_signs_and_spaces() {
         "Incorrect string representation"
     );
 }
+#[test]
+/// unsupported: percent signs are properly encoded and decoded
+fn unsupported_percent_signs_are_properly_encoded_and_decoded() {
+    assert!(
+        matches!(Purl::from_str("pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25"),
+        Err(PackageError::UnsupportedType)), "Type {} is not supported", "generic"
+    );
+    let parsed = match GenericPurl::<String>::from_str(
+        "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+    ) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+                error
+            )
+        },
+    };
+    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("100%"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("100%", parsed.name(), "Incorrect name");
+    assert_eq!(Some("100%"), parsed.version(), "Incorrect version");
+    assert_eq!(Some("100%"), parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> =
+        [("repository_url", "https://example.com/100%25/")].into_iter().collect();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
+}

@@ -17,13 +17,14 @@ const PATH: &AsciiSet = &QUERY.add(b'?').add(b'`').add(b'{').add(b'}');
 
 // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#how-to-build-purl-string-from-its-components
 // We mostly use the standard URL rules, but the PURL spec says '@' '?' '#' must
-// be escaped except when used as a separator.
-const PURL_PATH: &AsciiSet = &PATH.add(b'@').add(b'?').add(b'#');
+// be escaped except when used as a separator, and we do all the encoding in one
+// pass so we need to include '%'.
+const PURL_PATH: &AsciiSet = &PATH.add(b'@').add(b'?').add(b'#').add(b'%');
 const PURL_PATH_SEGMENT: &AsciiSet = &PURL_PATH.add(b'/');
 // For compatibility with PURL implementations that treat qualifiers as
 // form-urlencoded, escape '+' as well.
-const PURL_QUERY: &AsciiSet = &QUERY.add(b'@').add(b'?').add(b'#').add(b'+');
-const PURL_FRAGMENT: &AsciiSet = &FRAGMENT.add(b'@').add(b'?').add(b'#');
+const PURL_QUERY: &AsciiSet = &QUERY.add(b'@').add(b'?').add(b'#').add(b'+').add(b'%');
+const PURL_FRAGMENT: &AsciiSet = &FRAGMENT.add(b'@').add(b'?').add(b'#').add(b'%');
 
 impl<T> fmt::Display for GenericPurl<T>
 where
