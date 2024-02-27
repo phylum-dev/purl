@@ -1,3 +1,1 @@
-#Specify Codeowners for this repo like so:
-#* @phylum-dev/data-engineering @phylum-dev/core-platform
-#/src/src/processors/ @phylum-dev/core-platform
+* @phylum-dev/data-engineering @phylum-dev/user-components
