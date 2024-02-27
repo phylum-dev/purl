@@ -1296,3 +1296,39 @@ fn unsupported_percent_signs_are_properly_encoded_and_decoded() {
         "Incorrect string representation"
     );
 }
+#[test]
+/// unsupported: version encoding
+fn unsupported_version_encoding() {
+    assert!(
+        matches!(
+            Purl::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40"),
+            Err(PackageError::UnsupportedType)
+        ),
+        "Type {} is not supported",
+        "generic"
+    );
+    let parsed = match GenericPurl::<String>::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40") {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:generic/name@a%23%2Fb%3F%2Fc%40", error
+            )
+        },
+    };
+    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("name", parsed.name(), "Incorrect name");
+    assert_eq!(Some("a#/b?/c@"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
+    assert_eq!(
+        expected_qualifiers,
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+    );
+    assert_eq!(
+        "pkg:generic/name@a%23/b%3F/c%40",
+        &parsed.to_string(),
+        "Incorrect string representation"
+    );
+}

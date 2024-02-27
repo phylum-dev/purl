@@ -167,6 +167,8 @@ where
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         // This mostly follows the procedure documented in the PURL spec.
         // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#how-to-parse-a-purl-string-in-its-components
+
+        // Check for `pkg:` first to quickly reject non-PURLs.
         let s = s.strip_prefix("pkg:").ok_or(ParseError::UnsupportedUrlScheme)?;
 
         // PURLs are not supposed to have any leading slashes, but the spec says that
@@ -177,7 +179,7 @@ where
 
         // Remove subpath and qualifiers from the end now because they have higher
         // precedence than the path separater.
-        let s = match s.split_once('#') {
+        let s = match s.rsplit_once('#') {
             Some((s, subpath)) => {
                 parts.subpath = decode_subpath(subpath)?;
                 s
@@ -185,7 +187,7 @@ where
             None => s,
         };
 
-        let s = match s.split_once('?') {
+        let s = match s.rsplit_once('?') {
             Some((s, qualifiers)) => {
                 decode_qualifiers(qualifiers, &mut parts)?;
                 s
@@ -206,8 +208,16 @@ where
 
         let package_type = T::from_str(package_type)?;
 
+        let s = match s.rsplit_once('@') {
+            Some((s, version)) => {
+                parts.version = decode(version)?.into();
+                s
+            },
+            None => s,
+        };
+
         // The namespace is optional so we may not have any more slashes.
-        let name_and_version = match s.rsplit_once('/') {
+        let name = match s.rsplit_once('/') {
             Some((namespace, s)) => {
                 parts.namespace = decode_namespace(namespace)?;
                 s
@@ -215,15 +225,7 @@ where
             None => s,
         };
 
-        match name_and_version.rsplit_once('@') {
-            Some((name, version)) => {
-                parts.name = decode(name)?.into();
-                parts.version = decode(version)?.into();
-            },
-            None => {
-                parts.name = decode(name_and_version)?.into();
-            },
-        };
+        parts.name = decode(name)?.into();
 
         GenericPurlBuilder { package_type, parts }.build()
     }

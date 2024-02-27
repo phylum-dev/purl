@@ -134,5 +134,14 @@
     },
     "subpath": "100%",
     "is_invalid": false
+  },
+  {
+    "description": "version encoding",
+    "purl": "pkg:generic/name@a%23%2Fb%3F%2Fc%40",
+    "canonical_purl": "pkg:generic/name@a%23/b%3F/c%40",
+    "type": "generic",
+    "name": "name",
+    "version": "a#/b?/c@",
+    "is_invalid": false
   }
 ]
