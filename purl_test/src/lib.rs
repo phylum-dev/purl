@@ -23,15 +23,50 @@ fn valid_maven_purl() {
     assert_eq!("io", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.3.4"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:maven/org.apache.commons/io@1.3.4", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:maven/org.apache.commons/io@1.3.4", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/org.apache.commons/io@1.3.4",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("org.apache.commons"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.3.4"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -48,15 +83,43 @@ fn basic_valid_maven_purl_without_version() {
     assert_eq!("io", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:maven/org.apache.commons/io", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:maven/org.apache.commons/io", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/org.apache.commons/io",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("org.apache.commons"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -78,15 +141,50 @@ fn valid_go_purl_without_version_and_with_subpath() {
     assert_eq!("genproto", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(Some("googleapis/api/annotations"), parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:golang/google.golang.org/genproto#googleapis/api/annotations", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:GOLANG/google.golang.org/genproto#/googleapis/api/annotations/", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Golang,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:golang/google.golang.org/genproto#googleapis/api/annotations",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("google.golang.org"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("genproto", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(
+        Some("googleapis/api/annotations"),
+        parsed_canonical.subpath(),
+        "Incorrect subpath for canonicalized PURL"
+    );
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -108,31 +206,96 @@ fn valid_go_purl_with_version_and_subpath() {
     assert_eq!("genproto", parsed.name(), "Incorrect name");
     assert_eq!(Some("abcdedf"), parsed.version(), "Incorrect version");
     assert_eq!(Some("googleapis/api/annotations"), parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:golang/google.golang.org/genproto@abcdedf#googleapis/api/annotations", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:GOLANG/google.golang.org/genproto@abcdedf#/googleapis/api/annotations/", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Golang,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:golang/google.golang.org/genproto@abcdedf#googleapis/api/annotations",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("google.golang.org"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("genproto", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("abcdedf"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("googleapis/api/annotations"),
+        parsed_canonical.subpath(),
+        "Incorrect subpath for canonicalized PURL"
+    );
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: debian can use qualifiers
-fn unsupported_debian_can_use_qualifiers() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "deb"
+/// debian can use qualifiers
+fn debian_can_use_qualifiers() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "deb"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie", error
+                )
+            },
+        }
+    };
+    assert_eq!("deb", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("debian"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("curl", parsed.name(), "Incorrect name");
+    assert_eq!(Some("7.50.3-1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [("arch", "i386"), ("distro", "jessie")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str(
-        "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie",
-    ) {
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -141,40 +304,79 @@ fn unsupported_debian_can_use_qualifiers() {
             )
         },
     };
-    assert_eq!("deb", parsed.package_type(), "Incorrect package type");
-    assert_eq!(Some("debian"), parsed.namespace(), "Incorrect namespace");
-    assert_eq!("curl", parsed.name(), "Incorrect name");
-    assert_eq!(Some("7.50.3-1"), parsed.version(), "Incorrect version");
-    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("arch", "i386"), ("distro", "jessie")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "deb",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:deb/debian/curl@7.50.3-1?arch=i386&distro=jessie",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("debian"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("curl", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("7.50.3-1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("arch", "i386"), ("distro", "jessie")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: docker uses qualifiers and hash image id as versions
-fn unsupported_docker_uses_qualifiers_and_hash_image_id_as_versions() {
-    assert!(
-        matches!(
-            Purl::from_str(
-                "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.\
-                 io"
+/// docker uses qualifiers and hash image id as versions
+fn docker_uses_qualifiers_and_hash_image_id_as_versions() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str(
+                    "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?\
+                     repository_url=gcr.io"
+                ),
+                Err(PackageError::UnsupportedType)
             ),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "docker"
+            "Type {} is not supported",
+            "docker"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.io",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?\
+                     repository_url=gcr.io",
+                    error
+                )
+            },
+        }
+    };
+    assert_eq!("docker", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("customer"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("dockerimage", parsed.name(), "Incorrect name");
+    assert_eq!(Some("sha256:244fd47e07d1004f0aed9c"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [("repository_url", "gcr.io")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str(
+    let canonicalized = parsed.to_string();
+    assert_eq!(
         "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.io",
-    ) {
+        canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -185,21 +387,31 @@ fn unsupported_docker_uses_qualifiers_and_hash_image_id_as_versions() {
             )
         },
     };
-    assert_eq!("docker", parsed.package_type(), "Incorrect package type");
-    assert_eq!(Some("customer"), parsed.namespace(), "Incorrect namespace");
-    assert_eq!("dockerimage", parsed.name(), "Incorrect name");
-    assert_eq!(Some("sha256:244fd47e07d1004f0aed9c"), parsed.version(), "Incorrect version");
-    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("repository_url", "gcr.io")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "docker",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:docker/customer/dockerimage@sha256:244fd47e07d1004f0aed9c?repository_url=gcr.io",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("customer"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("dockerimage", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("sha256:244fd47e07d1004f0aed9c"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("repository_url", "gcr.io")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -219,15 +431,46 @@ fn java_gem_can_use_a_qualifier() {
     assert_eq!("jruby-launcher", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.1.2"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [("platform", "java")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("platform", "java")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
-        "pkg:gem/jruby-launcher@1.1.2?platform=java",
-        &parsed.to_string(),
+        "pkg:gem/jruby-launcher@1.1.2?platform=java", canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:gem/jruby-launcher@1.1.2?Platform=java", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Gem,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("jruby-launcher", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.1.2"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("platform", "java")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -252,19 +495,58 @@ fn maven_often_uses_qualifiers() {
     assert_eq!("batik-anim", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.9.1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
+    assert_eq!(
         [("classifier", "sources"), ("repository_url", "repo.spring.io/release")]
             .into_iter()
-            .collect();
-    assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+            .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?classifier=sources&repository_url=repo.\
          spring.io/release",
-        &parsed.to_string(),
+        canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:Maven/org.apache.xmlgraphics/batik-anim@1.9.1?classifier=sources&\
+                 repositorY_url=repo.spring.io/release",
+                error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("org.apache.xmlgraphics"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("batik-anim", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.9.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("classifier", "sources"), ("repository_url", "repo.spring.io/release")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -289,17 +571,58 @@ fn maven_pom_reference() {
     assert_eq!("batik-anim", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.9.1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("extension", "pom"), ("repository_url", "repo.spring.io/release")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("extension", "pom"), ("repository_url", "repo.spring.io/release")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:maven/org.apache.xmlgraphics/batik-anim@1.9.1?extension=pom&repository_url=repo.\
          spring.io/release",
-        &parsed.to_string(),
+        canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:Maven/org.apache.xmlgraphics/batik-anim@1.9.1?extension=pom&\
+                 repositorY_url=repo.spring.io/release",
+                error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("org.apache.xmlgraphics"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("batik-anim", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.9.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("extension", "pom"), ("repository_url", "repo.spring.io/release")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -321,16 +644,50 @@ fn maven_can_come_with_a_type_qualifier() {
     assert_eq!("jacob", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.14.3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("classifier", "x86"), ("type", "dll")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("classifier", "x86"), ("type", "dll")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:maven/net.sf.jacob-project/jacob@1.14.3?classifier=x86&type=dll", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:Maven/net.sf.jacob-project/jacob@1.14.3?classifier=x86&type=dll", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/net.sf.jacob-project/jacob@1.14.3?classifier=x86&type=dll",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("net.sf.jacob-project"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("jacob", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.14.3"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("classifier", "x86"), ("type", "dll")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -350,15 +707,50 @@ fn npm_can_be_scoped() {
     assert_eq!("animation", parsed.name(), "Incorrect name");
     assert_eq!(Some("12.3.1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:npm/%40angular/animation@12.3.1", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:npm/%40angular/animation@12.3.1", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Npm,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:npm/%40angular/animation@12.3.1",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("@angular"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("animation", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("12.3.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -378,31 +770,88 @@ fn pypi_names_have_special_rules_and_not_case_sensitive() {
     assert_eq!("django-package", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.11.1.dev1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
-        "pkg:pypi/django-package@1.11.1.dev1",
-        &parsed.to_string(),
+        "pkg:pypi/django-package@1.11.1.dev1", canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:PYPI/Django_package@1.11.1.dev1", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::PyPI,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("django-package", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.11.1.dev1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: rpm often use qualifiers
-fn unsupported_rpm_often_use_qualifiers() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "rpm"
+/// rpm often use qualifiers
+fn rpm_often_use_qualifiers() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "rpm"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25", error
+                )
+            },
+        }
+    };
+    assert_eq!("rpm", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("fedora"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("curl", parsed.name(), "Incorrect name");
+    assert_eq!(Some("7.50.3-1.fc25"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [("arch", "i386"), ("distro", "fedora-25")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str(
-        "pkg:Rpm/fedora/curl@7.50.3-1.fc25?Arch=i386&Distro=fedora-25",
-    ) {
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:rpm/fedora/curl@7.50.3-1.fc25?arch=i386&distro=fedora-25", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -411,21 +860,31 @@ fn unsupported_rpm_often_use_qualifiers() {
             )
         },
     };
-    assert_eq!("rpm", parsed.package_type(), "Incorrect package type");
-    assert_eq!(Some("fedora"), parsed.namespace(), "Incorrect namespace");
-    assert_eq!("curl", parsed.name(), "Incorrect name");
-    assert_eq!(Some("7.50.3-1.fc25"), parsed.version(), "Incorrect version");
-    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("arch", "i386"), ("distro", "fedora-25")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "rpm",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:rpm/fedora/curl@7.50.3-1.fc25?arch=i386&distro=fedora-25",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("fedora"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("curl", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("7.50.3-1.fc25"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("arch", "i386"), ("distro", "fedora-25")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -465,15 +924,43 @@ fn slash_after_scheme_is_not_significant() {
     assert_eq!("io", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:maven/org.apache.commons/io", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:/maven/org.apache.commons/io", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/org.apache.commons/io",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("org.apache.commons"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -493,15 +980,43 @@ fn double_slash_after_scheme_is_not_significant() {
     assert_eq!("io", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:maven/org.apache.commons/io", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg://maven/org.apache.commons/io", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/org.apache.commons/io",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("org.apache.commons"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -521,15 +1036,43 @@ fn slash_after_type_is_not_significant() {
     assert_eq!("io", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:maven/org.apache.commons/io", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:///maven/org.apache.commons/io", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/org.apache.commons/io",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("org.apache.commons"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -549,15 +1092,50 @@ fn valid_maven_purl_with_case_sensitive_namespace_and_name() {
     assert_eq!("HTTPClient", parsed.name(), "Incorrect name");
     assert_eq!(Some("0.3-3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:maven/HTTPClient/HTTPClient@0.3-3", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:maven/HTTPClient/HTTPClient@0.3-3", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/HTTPClient/HTTPClient@0.3-3",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("HTTPClient"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("HTTPClient", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("0.3-3"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -578,15 +1156,50 @@ fn valid_maven_purl_containing_a_space_in_the_version_and_qualifier() {
     assert_eq!("myartifact", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.0.0 Final"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [("mykey", "my value")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("mykey", "my value")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:maven/mygroup/myartifact@1.0.0%20Final?mykey=my%20value", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:maven/mygroup/myartifact@1.0.0%20Final?mykey=my%20value", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Maven,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:maven/mygroup/myartifact@1.0.0%20Final?mykey=my%20value",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("mygroup"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("myartifact", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.0.0 Final"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("mykey", "my value")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -599,43 +1212,70 @@ fn checks_for_invalid_qualifier_keys() {
     );
 }
 #[test]
-/// unsupported: valid conan purl
-fn unsupported_valid_conan_purl() {
-    assert!(
-        matches!(Purl::from_str("pkg:conan/cctz@2.3"), Err(PackageError::UnsupportedType)),
-        "Type {} is not supported",
-        "conan"
-    );
-    let parsed = match GenericPurl::<String>::from_str("pkg:conan/cctz@2.3") {
-        Ok(purl) => purl,
-        Err(error) => {
-            panic!("Failed to parse valid purl {:?}: {}", "pkg:conan/cctz@2.3", error)
-        },
+/// valid conan purl
+fn valid_conan_purl() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:conan/cctz@2.3"), Err(PackageError::UnsupportedType)),
+            "Type {} is not supported",
+            "conan"
+        );
+        match GenericPurl::<String>::from_str("pkg:conan/cctz@2.3") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!("Failed to parse valid purl {:?}: {}", "pkg:conan/cctz@2.3", error)
+            },
+        }
     };
     assert_eq!("conan", parsed.package_type(), "Incorrect package type");
     assert_eq!(None, parsed.namespace(), "Incorrect namespace");
     assert_eq!("cctz", parsed.name(), "Incorrect name");
     assert_eq!(Some("2.3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:conan/cctz@2.3", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:conan/cctz@2.3", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:conan/cctz@2.3", error)
+        },
+    };
+    assert_eq!(
+        "conan",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("cctz", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(Some("2.3"), parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
-/// unsupported: valid conan purl with namespace and qualifier channel
-fn unsupported_valid_conan_purl_with_namespace_and_qualifier_channel() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:conan/bincrafters/cctz@2.3?channel=stable"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "conan"
-    );
-    let parsed =
+/// valid conan purl with namespace and qualifier channel
+fn valid_conan_purl_with_namespace_and_qualifier_channel() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:conan/bincrafters/cctz@2.3?channel=stable"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "conan"
+        );
         match GenericPurl::<String>::from_str("pkg:conan/bincrafters/cctz@2.3?channel=stable") {
             Ok(purl) => purl,
             Err(error) => {
@@ -644,21 +1284,53 @@ fn unsupported_valid_conan_purl_with_namespace_and_qualifier_channel() {
                     "pkg:conan/bincrafters/cctz@2.3?channel=stable", error
                 )
             },
-        };
+        }
+    };
     assert_eq!("conan", parsed.package_type(), "Incorrect package type");
     assert_eq!(Some("bincrafters"), parsed.namespace(), "Incorrect namespace");
     assert_eq!("cctz", parsed.name(), "Incorrect name");
     assert_eq!(Some("2.3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [("channel", "stable")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("channel", "stable")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:conan/bincrafters/cctz@2.3?channel=stable", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:conan/bincrafters/cctz@2.3?channel=stable", error
+            )
+        },
+    };
+    assert_eq!(
+        "conan",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:conan/bincrafters/cctz@2.3?channel=stable",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("bincrafters"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("cctz", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(Some("2.3"), parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("channel", "stable")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -680,22 +1352,59 @@ fn invalid_conan_purl_only_channel_qualifier() {
     );
 }
 #[test]
-/// unsupported: valid conda purl with qualifiers
-fn unsupported_valid_conda_purl_with_qualifiers() {
-    assert!(
-        matches!(
-            Purl::from_str(
-                "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&\
-                 type=tar.bz2"
+/// valid conda purl with qualifiers
+fn valid_conda_purl_with_qualifiers() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str(
+                    "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&\
+                     type=tar.bz2"
+                ),
+                Err(PackageError::UnsupportedType)
             ),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "conda"
+            "Type {} is not supported",
+            "conda"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&type=tar.\
+             bz2",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&\
+                     type=tar.bz2",
+                    error
+                )
+            },
+        }
+    };
+    assert_eq!("conda", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("absl-py", parsed.name(), "Incorrect name");
+    assert_eq!(Some("0.4.1"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [
+            ("build", "py36h06a4308_0"),
+            ("channel", "main"),
+            ("subdir", "linux-64"),
+            ("type", "tar.bz2")
+        ]
+        .into_iter()
+        .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str(
+    let canonicalized = parsed.to_string();
+    assert_eq!(
         "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&type=tar.bz2",
-    ) {
+        canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -706,54 +1415,92 @@ fn unsupported_valid_conda_purl_with_qualifiers() {
             )
         },
     };
-    assert_eq!("conda", parsed.package_type(), "Incorrect package type");
-    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
-    assert_eq!("absl-py", parsed.name(), "Incorrect name");
-    assert_eq!(Some("0.4.1"), parsed.version(), "Incorrect version");
-    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [
-        ("build", "py36h06a4308_0"),
-        ("channel", "main"),
-        ("subdir", "linux-64"),
-        ("type", "tar.bz2"),
-    ]
-    .into_iter()
-    .collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "conda",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("absl-py", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
     assert_eq!(
-        "pkg:conda/absl-py@0.4.1?build=py36h06a4308_0&channel=main&subdir=linux-64&type=tar.bz2",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("0.4.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [
+            ("build", "py36h06a4308_0"),
+            ("channel", "main"),
+            ("subdir", "linux-64"),
+            ("type", "tar.bz2")
+        ]
+        .into_iter()
+        .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: valid cran purl
-fn unsupported_valid_cran_purl() {
-    assert!(
-        matches!(Purl::from_str("pkg:cran/A3@0.9.1"), Err(PackageError::UnsupportedType)),
-        "Type {} is not supported",
-        "cran"
-    );
-    let parsed = match GenericPurl::<String>::from_str("pkg:cran/A3@0.9.1") {
-        Ok(purl) => purl,
-        Err(error) => {
-            panic!("Failed to parse valid purl {:?}: {}", "pkg:cran/A3@0.9.1", error)
-        },
+/// valid cran purl
+fn valid_cran_purl() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:cran/A3@0.9.1"), Err(PackageError::UnsupportedType)),
+            "Type {} is not supported",
+            "cran"
+        );
+        match GenericPurl::<String>::from_str("pkg:cran/A3@0.9.1") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!("Failed to parse valid purl {:?}: {}", "pkg:cran/A3@0.9.1", error)
+            },
+        }
     };
     assert_eq!("cran", parsed.package_type(), "Incorrect package type");
     assert_eq!(None, parsed.namespace(), "Incorrect namespace");
     assert_eq!("A3", parsed.name(), "Incorrect name");
     assert_eq!(Some("0.9.1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:cran/A3@0.9.1", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:cran/A3@0.9.1", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:cran/A3@0.9.1", error)
+        },
+    };
+    assert_eq!(
+        "cran",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("A3", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("0.9.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// invalid cran purl without name
@@ -766,17 +1513,17 @@ fn invalid_cran_purl_without_version() {
     assert!(Purl::from_str("pkg:cran/A3").is_err(), "{}", "invalid cran purl without version");
 }
 #[test]
-/// unsupported: valid swift purl
-fn unsupported_valid_swift_purl() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:swift/github.com/Alamofire/Alamofire@5.4.3"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "swift"
-    );
-    let parsed =
+/// valid swift purl
+fn valid_swift_purl() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:swift/github.com/Alamofire/Alamofire@5.4.3"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "swift"
+        );
         match GenericPurl::<String>::from_str("pkg:swift/github.com/Alamofire/Alamofire@5.4.3") {
             Ok(purl) => purl,
             Err(error) => {
@@ -785,21 +1532,57 @@ fn unsupported_valid_swift_purl() {
                     "pkg:swift/github.com/Alamofire/Alamofire@5.4.3", error
                 )
             },
-        };
+        }
+    };
     assert_eq!("swift", parsed.package_type(), "Incorrect package type");
     assert_eq!(Some("github.com/Alamofire"), parsed.namespace(), "Incorrect namespace");
     assert_eq!("Alamofire", parsed.name(), "Incorrect name");
     assert_eq!(Some("5.4.3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:swift/github.com/Alamofire/Alamofire@5.4.3", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:swift/github.com/Alamofire/Alamofire@5.4.3", error
+            )
+        },
+    };
+    assert_eq!(
+        "swift",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:swift/github.com/Alamofire/Alamofire@5.4.3",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("github.com/Alamofire"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("Alamofire", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("5.4.3"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -830,36 +1613,69 @@ fn invalid_swift_purl_without_version() {
     );
 }
 #[test]
-/// unsupported: valid hackage purl
-fn unsupported_valid_hackage_purl() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:hackage/AC-HalfInteger@1.2.1"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "hackage"
-    );
-    let parsed = match GenericPurl::<String>::from_str("pkg:hackage/AC-HalfInteger@1.2.1") {
-        Ok(purl) => purl,
-        Err(error) => {
-            panic!("Failed to parse valid purl {:?}: {}", "pkg:hackage/AC-HalfInteger@1.2.1", error)
-        },
+/// valid hackage purl
+fn valid_hackage_purl() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:hackage/AC-HalfInteger@1.2.1"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "hackage"
+        );
+        match GenericPurl::<String>::from_str("pkg:hackage/AC-HalfInteger@1.2.1") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:hackage/AC-HalfInteger@1.2.1", error
+                )
+            },
+        }
     };
     assert_eq!("hackage", parsed.package_type(), "Incorrect package type");
     assert_eq!(None, parsed.namespace(), "Incorrect namespace");
     assert_eq!("AC-HalfInteger", parsed.name(), "Incorrect name");
     assert_eq!(Some("1.2.1"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
-        "pkg:hackage/AC-HalfInteger@1.2.1",
-        &parsed.to_string(),
+        "pkg:hackage/AC-HalfInteger@1.2.1", canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse valid purl {:?}: {}", "pkg:hackage/AC-HalfInteger@1.2.1", error)
+        },
+    };
+    assert_eq!(
+        "hackage",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("AC-HalfInteger", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("1.2.1"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -868,29 +1684,33 @@ fn name_and_version_are_always_required() {
     assert!(Purl::from_str("pkg:hackage").is_err(), "{}", "name and version are always required");
 }
 #[test]
-/// unsupported: minimal Hugging Face model
-fn unsupported_minimal_hugging_face_model() {
-    assert!(
-        matches!(
-            Purl::from_str(
-                "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027"
+/// minimal Hugging Face model
+fn minimal_hugging_face_model() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str(
+                    "pkg:huggingface/distilbert-base-uncased@\
+                     043235d6088ecd3dd5fb5ca3592b6913fd516027"
+                ),
+                Err(PackageError::UnsupportedType)
             ),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "huggingface"
-    );
-    let parsed = match GenericPurl::<String>::from_str(
-        "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
-    ) {
-        Ok(purl) => purl,
-        Err(error) => {
-            panic!(
-                "Failed to parse valid purl {:?}: {}",
-                "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
-                error
-            )
-        },
+            "Type {} is not supported",
+            "huggingface"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:huggingface/distilbert-base-uncased@\
+                     043235d6088ecd3dd5fb5ca3592b6913fd516027",
+                    error
+                )
+            },
+        }
     };
     assert_eq!("huggingface", parsed.package_type(), "Incorrect package type");
     assert_eq!(None, parsed.namespace(), "Incorrect namespace");
@@ -901,36 +1721,76 @@ fn unsupported_minimal_hugging_face_model() {
         "Incorrect version"
     );
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
-        &parsed.to_string(),
+        canonicalized,
         "Incorrect string representation"
     );
-}
-#[test]
-/// unsupported: Hugging Face model with staging endpoint
-fn unsupported_hugging_face_model_with_staging_endpoint() {
-    assert!(
-        matches!(Purl::from_str("pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co"),
-        Err(PackageError::UnsupportedType)), "Type {} is not supported", "huggingface"
-    );
-    let parsed = match GenericPurl::<
-        String,
-    >::from_str(
-        "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
-    ) {
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
                 "Failed to parse valid purl {:?}: {}",
-                "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+                "pkg:huggingface/distilbert-base-uncased@043235d6088ecd3dd5fb5ca3592b6913fd516027",
                 error
             )
+        },
+    };
+    assert_eq!(
+        "huggingface",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!(
+        "distilbert-base-uncased",
+        parsed_canonical.name(),
+        "Incorrect name for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("043235d6088ecd3dd5fb5ca3592b6913fd516027"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
+}
+#[test]
+/// Hugging Face model with staging endpoint
+fn hugging_face_model_with_staging_endpoint() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co"),
+            Err(PackageError::UnsupportedType)), "Type {} is not supported",
+            "huggingface"
+        );
+        match GenericPurl::<
+            String,
+        >::from_str(
+            "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
+                    error
+                )
+            }
         }
     };
     assert_eq!("huggingface", parsed.package_type(), "Incorrect package type");
@@ -942,36 +1802,78 @@ fn unsupported_hugging_face_model_with_staging_endpoint() {
         "Incorrect version"
     );
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("repository_url", "https://hub-ci.huggingface.co")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("repository_url", "https://hub-ci.huggingface.co")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
-        & parsed.to_string(), "Incorrect string representation"
+        canonicalized, "Incorrect string representation"
     );
-}
-#[test]
-/// unsupported: MLflow model tracked in Azure ML (case sensitive)
-fn unsupported_m_lflow_model_tracked_in_azure_ml_case_sensitive_() {
-    assert!(
-        matches!(Purl::from_str("pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace"),
-        Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
-    );
-    let parsed = match GenericPurl::<
-        String,
-    >::from_str(
-        "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
-    ) {
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
                 "Failed to parse valid purl {:?}: {}",
-                "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+                "pkg:huggingface/microsoft/deberta-v3-base@559062ad13d311b87b2c455e67dcd5f1c8f65111?repository_url=https://hub-ci.huggingface.co",
                 error
             )
+        },
+    };
+    assert_eq!(
+        "huggingface",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("microsoft"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("deberta-v3-base", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("559062ad13d311b87b2c455e67dcd5f1c8f65111"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("repository_url", "https://hub-ci.huggingface.co")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
+}
+#[test]
+/// MLflow model tracked in Azure ML (case sensitive)
+fn m_lflow_model_tracked_in_azure_ml_case_sensitive_() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace"),
+            Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
+        );
+        match GenericPurl::<
+            String,
+        >::from_str(
+            "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
+                    error
+                )
+            }
         }
     };
     assert_eq!("mlflow", parsed.package_type(), "Incorrect package type");
@@ -979,42 +1881,66 @@ fn unsupported_m_lflow_model_tracked_in_azure_ml_case_sensitive_() {
     assert_eq!("CreditFraud", parsed.name(), "Incorrect name");
     assert_eq!(Some("3"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [
-        (
-            "repository_url",
-            "https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
-        ),
-    ]
-        .into_iter()
-        .collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("repository_url",
+        "https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace")]
+        .into_iter().collect:: < HashMap < & str, & str >> (), parsed.qualifiers().iter()
+        .map(| (k, v) | (k.as_str(), v)).collect:: < HashMap < & str, & str >> (),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
-        & parsed.to_string(), "Incorrect string representation"
+        canonicalized, "Incorrect string representation"
     );
-}
-#[test]
-/// unsupported: MLflow model with unique identifiers
-fn unsupported_m_lflow_model_with_unique_identifiers() {
-    assert!(
-        matches!(Purl::from_str("pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
-        Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
-    );
-    let parsed = match GenericPurl::<
-        String,
-    >::from_str(
-        "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
-    ) {
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
                 "Failed to parse valid purl {:?}: {}",
-                "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+                "pkg:mlflow/CreditFraud@3?repository_url=https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace",
                 error
             )
+        },
+    };
+    assert_eq!(
+        "mlflow",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("CreditFraud", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(Some("3"), parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("repository_url",
+        "https://westus2.api.azureml.ms/mlflow/v1.0/subscriptions/a50f2011-fab8-4164-af23-c62881ef8c95/resourceGroups/TestResourceGroup/providers/Microsoft.MachineLearningServices/workspaces/TestWorkspace")]
+        .into_iter().collect:: < HashMap < & str, & str >> (), parsed_canonical
+        .qualifiers().iter().map(| (k, v) | (k.as_str(), v)).collect:: < HashMap < & str,
+        & str >> (), "Incorrect qualifiers for canonicalized PURL"
+    );
+}
+#[test]
+/// MLflow model with unique identifiers
+fn m_lflow_model_with_unique_identifiers() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
+            Err(PackageError::UnsupportedType)), "Type {} is not supported", "mlflow"
+        );
+        match GenericPurl::<
+            String,
+        >::from_str(
+            "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+                    error
+                )
+            }
         }
     };
     assert_eq!("mlflow", parsed.package_type(), "Incorrect package type");
@@ -1022,20 +1948,55 @@ fn unsupported_m_lflow_model_with_unique_identifiers() {
     assert_eq!("trafficsigns", parsed.name(), "Incorrect name");
     assert_eq!(Some("10"), parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = [
-        ("model_uuid", "36233173b22f4c89b451f1228d700d49"),
-        ("repository_url", "https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
-        ("run_id", "410a3121-2709-4f88-98dd-dba0ef056b0a"),
-    ]
-    .into_iter()
-    .collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [
+            ("model_uuid", "36233173b22f4c89b451f1228d700d49"),
+            ("repository_url", "https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
+            ("run_id", "410a3121-2709-4f88-98dd-dba0ef056b0a")
+        ]
+        .into_iter()
+        .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
         "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a",
-        & parsed.to_string(), "Incorrect string representation"
+        canonicalized, "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:mlflow/trafficsigns@10?model_uuid=36233173b22f4c89b451f1228d700d49&run_id=410a3121-2709-4f88-98dd-dba0ef056b0a&repository_url=https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow",
+                error
+            )
+        },
+    };
+    assert_eq!(
+        "mlflow",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("trafficsigns", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(Some("10"), parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [
+            ("model_uuid", "36233173b22f4c89b451f1228d700d49"),
+            ("repository_url", "https://adb-5245952564735461.0.azuredatabricks.net/api/2.0/mlflow"),
+            ("run_id", "410a3121-2709-4f88-98dd-dba0ef056b0a")
+        ]
+        .into_iter()
+        .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -1060,15 +2021,46 @@ fn valid_go_purl_with_uppercase_in_namespace() {
     assert_eq!("v2", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Golang,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:golang/github.com/GoogleCloudPlatform/cloud-sql-proxy/v2",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("github.com/GoogleCloudPlatform/cloud-sql-proxy"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("v2", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
@@ -1085,12 +2077,41 @@ fn valid_go_purl_with_uppercase_in_name() {
     assert_eq!("A", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:golang/example.com/A", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:golang/example.com/A", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:golang/example.com/A", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::Golang,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("example.com"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("A", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// valid go purl without namespace
@@ -1106,12 +2127,37 @@ fn valid_go_purl_without_namespace() {
     assert_eq!("v.io", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:golang/v.io", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:golang/v.io", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:golang/v.io", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::Golang,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("v.io", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// valid npm purl with uppercase in name
@@ -1127,12 +2173,37 @@ fn valid_npm_purl_with_uppercase_in_name() {
     assert_eq!("parseUri", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:npm/parseUri", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:npm/parseUri", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:npm/parseUri", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::Npm,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("parseUri", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// valid cargo purl with uppercase in name
@@ -1148,12 +2219,37 @@ fn valid_cargo_purl_with_uppercase_in_name() {
     assert_eq!("Inflector", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:cargo/Inflector", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:cargo/Inflector", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:cargo/Inflector", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::Cargo,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("Inflector", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// non-canonical nuget purl with uppercase in name
@@ -1169,12 +2265,37 @@ fn non_canonical_nuget_purl_with_uppercase_in_name() {
     assert_eq!("newtonsoft.json", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:nuget/newtonsoft.json", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:nuget/newtonsoft.json", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:nuget/Newtonsoft.Json", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::NuGet,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("newtonsoft.json", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// non-canonical pypi purl with uppercase in name
@@ -1190,12 +2311,37 @@ fn non_canonical_pypi_purl_with_uppercase_in_name() {
     assert_eq!("pytest", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:pypi/pytest", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:pypi/pytest", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!("Failed to parse canonical purl {:?}: {}", "pkg:pypi/PyTest", error)
+        },
+    };
+    assert_eq!(
+        &PackageType::PyPI,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("pytest", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// non-canonical pypi purl with specials in name
@@ -1214,12 +2360,40 @@ fn non_canonical_pypi_purl_with_specials_in_name() {
     assert_eq!("-special-name-", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    assert_eq!("pkg:pypi/-special-name-", &parsed.to_string(), "Incorrect string representation");
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:pypi/-special-name-", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:pypi/_-.-_special_-.-_name_-.-_", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::PyPI,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("-special-name-", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
 }
 #[test]
 /// invalid maven purl without namespace
@@ -1248,28 +2422,88 @@ fn plus_signs_and_spaces() {
     assert_eq!("example", parsed.name(), "Incorrect name");
     assert_eq!(None, parsed.version(), "Incorrect version");
     assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("repository_url", "https://example.com/a b+c/")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        [("repository_url", "https://example.com/a b+c/")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
+    let canonicalized = parsed.to_string();
     assert_eq!(
-        "pkg:cargo/example?repository_url=https://example.com/a%20b%2Bc/",
-        &parsed.to_string(),
+        "pkg:cargo/example?repository_url=https://example.com/a%20b%2Bc/", canonicalized,
         "Incorrect string representation"
+    );
+    let parsed_canonical = match Purl::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse canonical purl {:?}: {}",
+                "pkg:cargo/example?repository_url=https://example.com/a%20b+c/", error
+            )
+        },
+    };
+    assert_eq!(
+        &PackageType::Cargo,
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("example", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("repository_url", "https://example.com/a b+c/")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: percent signs are properly encoded and decoded
-fn unsupported_percent_signs_are_properly_encoded_and_decoded() {
-    assert!(
-        matches!(Purl::from_str("pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25"),
-        Err(PackageError::UnsupportedType)), "Type {} is not supported", "generic"
+/// percent signs are properly encoded and decoded
+fn percent_signs_are_properly_encoded_and_decoded() {
+    let parsed = {
+        assert!(
+            matches!(Purl::from_str("pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25"),
+            Err(PackageError::UnsupportedType)), "Type {} is not supported", "generic"
+        );
+        match GenericPurl::<String>::from_str(
+            "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+        ) {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
+                    error
+                )
+            },
+        }
+    };
+    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
+    assert_eq!(Some("100%"), parsed.namespace(), "Incorrect namespace");
+    assert_eq!("100%", parsed.name(), "Incorrect name");
+    assert_eq!(Some("100%"), parsed.version(), "Incorrect version");
+    assert_eq!(Some("100%"), parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [("repository_url", "https://example.com/100%25/")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str(
+    let canonicalized = parsed.to_string();
+    assert_eq!(
         "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
-    ) {
+        canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -1279,35 +2513,74 @@ fn unsupported_percent_signs_are_properly_encoded_and_decoded() {
             )
         },
     };
-    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
-    assert_eq!(Some("100%"), parsed.namespace(), "Incorrect namespace");
-    assert_eq!("100%", parsed.name(), "Incorrect name");
-    assert_eq!(Some("100%"), parsed.version(), "Incorrect version");
-    assert_eq!(Some("100%"), parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> =
-        [("repository_url", "https://example.com/100%25/")].into_iter().collect();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "generic",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
     assert_eq!(
-        "pkg:generic/100%25/100%25@100%25?repository_url=https://example.com/100%2525/#100%25",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("100%"),
+        parsed_canonical.namespace(),
+        "Incorrect namespace for canonicalized PURL"
+    );
+    assert_eq!("100%", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(
+        Some("100%"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(
+        Some("100%"),
+        parsed_canonical.subpath(),
+        "Incorrect subpath for canonicalized PURL"
+    );
+    assert_eq!(
+        [("repository_url", "https://example.com/100%25/")]
+            .into_iter()
+            .collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
 #[test]
-/// unsupported: version encoding
-fn unsupported_version_encoding() {
-    assert!(
-        matches!(
-            Purl::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40"),
-            Err(PackageError::UnsupportedType)
-        ),
-        "Type {} is not supported",
-        "generic"
+/// version encoding
+fn version_encoding() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "generic"
+        );
+        match GenericPurl::<String>::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:generic/name@a%23%2Fb%3F%2Fc%40", error
+                )
+            },
+        }
+    };
+    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("name", parsed.name(), "Incorrect name");
+    assert_eq!(Some("a#/b?/c@"), parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
     );
-    let parsed = match GenericPurl::<String>::from_str("pkg:generic/name@a%23%2Fb%3F%2Fc%40") {
+    let canonicalized = parsed.to_string();
+    assert_eq!("pkg:generic/name@a%23/b%3F/c%40", canonicalized, "Incorrect string representation");
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
         Ok(purl) => purl,
         Err(error) => {
             panic!(
@@ -1316,19 +2589,26 @@ fn unsupported_version_encoding() {
             )
         },
     };
-    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
-    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
-    assert_eq!("name", parsed.name(), "Incorrect name");
-    assert_eq!(Some("a#/b?/c@"), parsed.version(), "Incorrect version");
-    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
-    let expected_qualifiers: HashMap<&str, &str> = HashMap::new();
     assert_eq!(
-        expected_qualifiers,
-        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>()
+        "generic",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
     );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("name", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
     assert_eq!(
-        "pkg:generic/name@a%23/b%3F/c%40",
-        &parsed.to_string(),
-        "Incorrect string representation"
+        Some("a#/b?/c@"),
+        parsed_canonical.version(),
+        "Incorrect version for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        HashMap::<&str, &str>::new(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
     );
 }
