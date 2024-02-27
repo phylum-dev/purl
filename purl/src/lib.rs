@@ -4,7 +4,6 @@
 use std::borrow::Cow;
 
 pub use builder::*;
-pub use format::*;
 #[cfg(feature = "package-type")]
 pub use package_type::*;
 pub use parse::*;

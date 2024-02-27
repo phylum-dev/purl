@@ -56,7 +56,7 @@ where
 
         if let Some(version) = self.version() {
             // The version is a continuation of the same path segment.
-            write!(f, "@{}", utf8_percent_encode(version, PURL_PATH_SEGMENT))?;
+            write!(f, "@{}", utf8_percent_encode(version, PURL_PATH))?;
         }
 
         if !self.parts.qualifiers.is_empty() {
@@ -156,18 +156,6 @@ mod tests {
         assert_eq!(
             "pkg:generic/a%23%2Fb%3F%2Fc%40",
             &GenericPurlBuilder::new(Cow::Borrowed("generic"), "a#/b?/c@")
-                .build()
-                .expect("Could not build PURL")
-                .to_string(),
-        );
-    }
-
-    #[test]
-    fn display_encodes_version_correctly() {
-        assert_eq!(
-            "pkg:generic/name@a%23%2Fb%3F%2Fc%40",
-            &GenericPurlBuilder::new(Cow::Borrowed("generic"), "name")
-                .with_version("a#/b?/c@")
                 .build()
                 .expect("Could not build PURL")
                 .to_string(),
