@@ -5,12 +5,12 @@ use std::str::FromStr;
 
 use convert_case::{Case, Casing};
 use lazy_static::lazy_static;
-use proc_macro2::TokenStream;
+use proc_macro2::{Span, TokenStream};
 use purl::PackageType;
 use quote::{format_ident, quote};
 use regex::Regex;
 use serde::Deserialize;
-use syn::parse_quote;
+use syn::{parse_quote, Ident};
 
 use crate::workspace_dir;
 
@@ -105,65 +105,80 @@ fn test_to_tokens(test: Test) -> Option<TokenStream> {
             }
         }
     } else {
+        let canonicalized_binding = Ident::new("canonicalized", Span::call_site());
+
         let name = name.expect("Valid test must have package name");
         let namespace = option_to_tokens(namespace);
         let version = option_to_tokens(version);
         let subpath = option_to_tokens(subpath);
         let qualifiers = qualifiers_to_tokens(qualifiers);
 
+        // Check if this type is supported by this library.
+        let expected_type;
+        let parse;
+        let parse_canonical;
         if let Some(parsed_type) = parsed_type {
-            let parsed_type = type_to_tokens(parsed_type);
-            quote! {
-                #[test]
-                #[doc = #description]
-                fn #test_name() {
-                    let parsed = match Purl::from_str(#purl) {
-                        Ok(purl) => purl,
-                        Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
-                    };
-
-                    assert_eq!(&#parsed_type, parsed.package_type(), "Incorrect package type");
-                    assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
-                    assert_eq!(#name, parsed.name(), "Incorrect name");
-                    assert_eq!(#version, parsed.version(), "Incorrect version");
-                    assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
-
-                    let expected_qualifiers: HashMap<&str, &str> = #qualifiers;
-                    assert_eq!(expected_qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>());
-
-                    assert_eq!(#canonical_purl, &parsed.to_string(), "Incorrect string representation");
+            let type_tokens = type_to_tokens(parsed_type);
+            expected_type = quote! { &#type_tokens };
+            parse = quote! {
+                match Purl::from_str(#purl) {
+                    Ok(purl) => purl,
+                    Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
                 }
-            }
+            };
+            parse_canonical = quote! {
+                match Purl::from_str(&#canonicalized_binding) {
+                    Ok(purl) => purl,
+                    Err(error) => panic!("Failed to parse canonical purl {:?}: {}", #purl, error),
+                }
+            };
         } else {
             // For all the unsupported cases, we can still verify the ability to handle them
             // without type-specific rules.
-            let test_name = format_ident!("unsupported_{}", test_name);
-            let description = format!("unsupported: {}", description);
-            quote! {
-                #[test]
-                #[doc = #description]
-                fn #test_name() {
+            // If the type-specific rules are required for the test to pass, the test needs
+            // to be added to BLACKLIST.
+            expected_type = quote! { #r#type };
+            parse = quote! {
+                {
                     // Purl (GenericPurl<PackageType>) should return an error.
                     assert!(matches!(Purl::from_str(#purl), Err(PackageError::UnsupportedType)), "Type {} is not supported", #r#type);
 
-                    // This should succeed for valid PURLs.
-                    let parsed = match GenericPurl::<String>::from_str(#purl) {
+                    match GenericPurl::<String>::from_str(#purl) {
                         Ok(purl) => purl,
                         Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
-                    };
-
-                    // These values may not be in the expected form because type-specific rules are not applied.
-                    assert_eq!(#r#type, parsed.package_type(), "Incorrect package type");
-                    assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
-                    assert_eq!(#name, parsed.name(), "Incorrect name");
-                    assert_eq!(#version, parsed.version(), "Incorrect version");
-                    assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
-
-                    let expected_qualifiers: HashMap<&str, &str> = #qualifiers;
-                    assert_eq!(expected_qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>());
-
-                    assert_eq!(#canonical_purl, &parsed.to_string(), "Incorrect string representation");
+                    }
                 }
+            };
+            parse_canonical = quote! {
+                match GenericPurl::<String>::from_str(&#canonicalized_binding) {
+                    Ok(purl) => purl,
+                    Err(error) => panic!("Failed to parse valid purl {:?}: {}", #purl, error),
+                }
+            };
+        }
+
+        quote! {
+            #[test]
+            #[doc = #description]
+            fn #test_name() {
+                let parsed = #parse;
+                assert_eq!(#expected_type, parsed.package_type(), "Incorrect package type");
+                assert_eq!(#namespace, parsed.namespace(), "Incorrect namespace");
+                assert_eq!(#name, parsed.name(), "Incorrect name");
+                assert_eq!(#version, parsed.version(), "Incorrect version");
+                assert_eq!(#subpath, parsed.subpath(), "Incorrect subpath");
+                assert_eq!(#qualifiers, parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(), "Incorrect qualifiers");
+
+                let #canonicalized_binding = parsed.to_string();
+                assert_eq!(#canonical_purl, #canonicalized_binding, "Incorrect string representation");
+
+                let parsed_canonical = #parse_canonical;
+                assert_eq!(#expected_type, parsed_canonical.package_type(), "Incorrect package type for canonicalized PURL");
+                assert_eq!(#namespace, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+                assert_eq!(#name, parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+                assert_eq!(#version, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+                assert_eq!(#subpath, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+                assert_eq!(#qualifiers, parsed_canonical.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(), "Incorrect qualifiers for canonicalized PURL");
             }
         }
     })
@@ -186,9 +201,9 @@ fn qualifiers_to_tokens(value: Option<HashMap<&str, &str>>) -> TokenStream {
     let mut value: Vec<(&str, &str)> = value.unwrap_or_default().into_iter().collect();
     value.sort_unstable();
     if value.is_empty() {
-        quote! { HashMap::new() }
+        quote! { HashMap::<&str, &str>::new() }
     } else {
         let entries = value.into_iter().map(|(k, v)| quote! { (#k, #v) });
-        quote! { [#(#entries),*].into_iter().collect() }
+        quote! { [#(#entries),*].into_iter().collect::<HashMap<&str, &str>>() }
     }
 }
