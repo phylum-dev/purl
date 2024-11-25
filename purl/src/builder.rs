@@ -153,7 +153,6 @@ impl<T> GenericPurlBuilder<T> {
     pub fn without_qualifier<S>(mut self, k: S) -> Self
     where
         S: AsRef<str>,
-        SmallString: From<S>,
     {
         self.parts.qualifiers.remove(k);
         self
