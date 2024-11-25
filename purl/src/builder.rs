@@ -158,6 +158,12 @@ impl<T> GenericPurlBuilder<T> {
         self
     }
 
+    /// Unset all qualifiers.
+    pub fn without_qualifiers(mut self) -> Self {
+        self.parts.qualifiers.clear();
+        self
+    }
+
     /// Set the subpath.
     ///
     /// Passing `""` will unset the subpath.
