@@ -315,7 +315,7 @@ impl<'a> IntoIterator for &'a mut Qualifiers {
 /// A case-insensitive qualifier name.
 ///
 /// Comparisons between this type and other types are case insensitive.
-#[derive(Clone, Debug, Default, Eq, Hash, PartialEq, PartialOrd, Ord)]
+#[derive(Clone, Debug, Default, Eq, Hash, Ord)]
 pub struct QualifierKey(SmallString);
 
 impl<S> PartialEq<S> for QualifierKey
@@ -342,6 +342,24 @@ impl Deref for QualifierKey {
 
     fn deref(&self) -> &Self::Target {
         &self.0
+    }
+}
+
+impl AsRef<str> for QualifierKey {
+    fn as_ref(&self) -> &str {
+        self.as_str()
+    }
+}
+
+impl From<QualifierKey> for SmallString {
+    fn from(value: QualifierKey) -> Self {
+        SmallString::from(value.0)
+    }
+}
+
+impl From<&QualifierKey> for SmallString {
+    fn from(value: &QualifierKey) -> Self {
+        SmallString::from(value.as_str())
     }
 }
 
