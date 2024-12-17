@@ -321,6 +321,7 @@ impl<T> GenericPurl<T> {
     }
 }
 
+#[cfg(feature = "package-type")]
 impl Purl {
     /// Create a new [`PurlBuilder`] with a combined name and namespace.
     pub fn builder_with_combined_name<S>(
@@ -590,6 +591,7 @@ mod tests {
         assert_eq!(None, purl.subpath());
     }
 
+    #[cfg(feature = "package-type")]
     #[test]
     fn namespaced_name() {
         let purl =
