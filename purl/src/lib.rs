@@ -152,7 +152,7 @@ impl PurlShape for String {
 /// Without type-specific functionality, it's possible to create PURLs that have
 /// incorrect capitalization or are missing a required namespace or required
 /// qualifiers.
-impl<'a> PurlShape for Cow<'a, str> {
+impl PurlShape for Cow<'_, str> {
     type Error = ParseError;
 
     fn package_type(&self) -> Cow<str> {
@@ -318,6 +318,42 @@ impl<T> GenericPurl<T> {
     pub fn into_builder(self) -> GenericPurlBuilder<T> {
         let GenericPurl { package_type, parts } = self;
         GenericPurlBuilder { package_type, parts }
+    }
+}
+
+#[cfg(feature = "package-type")]
+impl Purl {
+    /// Create a new [`PurlBuilder`] with a combined name and namespace.
+    pub fn builder_with_combined_name<S>(
+        package_type: PackageType,
+        namespaced_name: S,
+    ) -> PurlBuilder
+    where
+        S: AsRef<str>,
+    {
+        // Split apart namespace and name based on ecosystem.
+        let namespaced_name = namespaced_name.as_ref();
+        let (namespace, name) = match package_type {
+            PackageType::Cargo | PackageType::Gem | PackageType::NuGet | PackageType::PyPI => {
+                (None, namespaced_name)
+            },
+            PackageType::Golang | PackageType::Npm => match namespaced_name.rsplit_once('/') {
+                Some((namespace, name)) => (Some(namespace), name),
+                None => (None, namespaced_name),
+            },
+            PackageType::Maven => match namespaced_name.split_once(':') {
+                Some((namespace, name)) => (Some(namespace), name),
+                None => (None, namespaced_name),
+            },
+        };
+
+        // Create the PURL builder.
+        let mut builder = GenericPurlBuilder::new(package_type, name);
+        if let Some(namespace) = namespace {
+            builder = builder.with_namespace(namespace);
+        }
+
+        builder
     }
 }
 
@@ -553,5 +589,20 @@ mod tests {
     fn subpath_when_empty_is_none() {
         let purl = GenericPurl::new(Cow::Borrowed("type"), "name").unwrap();
         assert_eq!(None, purl.subpath());
+    }
+
+    #[cfg(feature = "package-type")]
+    #[test]
+    fn namespaced_name() {
+        let purl =
+            Purl::builder_with_combined_name(PackageType::Npm, "@angular/cli").build().unwrap();
+        assert_eq!(purl.namespace(), Some("@angular"));
+        assert_eq!(purl.name(), "cli");
+
+        let purl = Purl::builder_with_combined_name(PackageType::Maven, "org.maven.plugins:pom")
+            .build()
+            .unwrap();
+        assert_eq!(purl.namespace(), Some("org.maven.plugins"));
+        assert_eq!(purl.name(), "pom");
     }
 }

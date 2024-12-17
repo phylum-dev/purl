@@ -100,7 +100,7 @@ pub struct Checksum<'a> {
     algorithms: HashMap<SmallString, Cow<'a, str>>,
 }
 
-impl<'a> KnownQualifierKey for Checksum<'a> {
+impl KnownQualifierKey for Checksum<'_> {
     const KEY: &'static str = "checksum";
 }
 
@@ -154,7 +154,7 @@ impl<'a> TryFrom<Checksum<'a>> for SmallString {
     }
 }
 
-impl<'a> Checksum<'a> {
+impl Checksum<'_> {
     /// Get a reference to the hex bytes of a hash.
     ///
     /// The hash may not be valid hex bytes.
@@ -258,7 +258,7 @@ impl<'a> ChecksumValue<'a> {
     }
 }
 
-impl<'a> Deref for ChecksumValue<'a> {
+impl Deref for ChecksumValue<'_> {
     type Target = str;
 
     fn deref(&self) -> &Self::Target {
