@@ -1,6 +1,6 @@
 [package]
 name = "purl"
-version = "0.1.4"
+version = "0.1.5"
 edition = "2021"
 description = "A Package URL implementation with customizable package types"
 repository = "https://github.com/phylum-dev/purl/"
