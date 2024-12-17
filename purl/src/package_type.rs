@@ -5,6 +5,8 @@ use std::fmt;
 use std::str::FromStr;
 
 use phf::phf_map;
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
 use unicase::UniCase;
 
 use crate::{
@@ -134,6 +136,8 @@ pub type PurlBuilder = GenericPurlBuilder<PackageType>;
 ///
 /// This is a subset of the types described in the PURL spec repository. See
 /// [`Purl`] for details.
+#[cfg_attr(feature = "serde", derive(Serialize, Deserialize))]
+#[cfg_attr(feature = "serde", serde(rename_all = "lowercase"))]
 #[derive(Clone, Copy, Debug, Eq, Hash, Ord, PartialEq, PartialOrd)]
 #[non_exhaustive]
 pub enum PackageType {
