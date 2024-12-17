@@ -329,10 +329,10 @@ impl Purl {
         namespaced_name: S,
     ) -> PurlBuilder
     where
-        S: Into<SmallString>,
+        S: AsRef<str>,
     {
         // Split apart namespace and name based on ecosystem.
-        let namespaced_name = namespaced_name.into();
+        let namespaced_name = namespaced_name.as_ref();
         let (namespace, name) = match package_type {
             PackageType::Cargo | PackageType::Gem | PackageType::NuGet | PackageType::PyPI => {
                 (None, namespaced_name)
