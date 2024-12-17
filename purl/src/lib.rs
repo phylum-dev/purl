@@ -338,11 +338,11 @@ impl Purl {
                 (None, namespaced_name)
             },
             PackageType::Golang | PackageType::Npm => match namespaced_name.rsplit_once('/') {
-                Some((namespace, name)) => (Some(namespace), name.into()),
+                Some((namespace, name)) => (Some(namespace), name),
                 None => (None, namespaced_name),
             },
             PackageType::Maven => match namespaced_name.split_once(':') {
-                Some((namespace, name)) => (Some(namespace), name.into()),
+                Some((namespace, name)) => (Some(namespace), name),
                 None => (None, namespaced_name),
             },
         };
