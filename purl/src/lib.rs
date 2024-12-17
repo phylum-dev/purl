@@ -355,6 +355,23 @@ impl Purl {
 
         builder
     }
+
+    /// Combine the namespace and ecosystem in the ecosystem-specific format.
+    pub fn combined_name(&self) -> Cow<'_, str> {
+        match self.package_type {
+            PackageType::Cargo | PackageType::Gem | PackageType::NuGet | PackageType::PyPI => {
+                self.name().into()
+            },
+            PackageType::Golang | PackageType::Npm => match self.namespace() {
+                Some(namespace) => Cow::Owned(format!("{}/{}", namespace, self.name())),
+                None => self.name().into(),
+            },
+            PackageType::Maven => match self.namespace() {
+                Some(namespace) => Cow::Owned(format!("{}:{}", namespace, self.name())),
+                None => self.name().into(),
+            },
+        }
+    }
 }
 
 /// Check whether a package type string is valid according to the rules of the
@@ -598,11 +615,18 @@ mod tests {
             Purl::builder_with_combined_name(PackageType::Npm, "@angular/cli").build().unwrap();
         assert_eq!(purl.namespace(), Some("@angular"));
         assert_eq!(purl.name(), "cli");
+        assert_eq!(purl.combined_name(), "@angular/cli");
 
         let purl = Purl::builder_with_combined_name(PackageType::Maven, "org.maven.plugins:pom")
             .build()
             .unwrap();
         assert_eq!(purl.namespace(), Some("org.maven.plugins"));
         assert_eq!(purl.name(), "pom");
+        assert_eq!(purl.combined_name(), "org.maven.plugins:pom");
+
+        let purl = Purl::builder_with_combined_name(PackageType::Cargo, "libc").build().unwrap();
+        assert_eq!(purl.namespace(), None);
+        assert_eq!(purl.name(), "libc");
+        assert_eq!(purl.combined_name(), "libc");
     }
 }
