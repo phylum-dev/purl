@@ -322,7 +322,7 @@ mod de {
 
     struct PurlVisitor<T>(PhantomData<T>);
 
-    impl<'de, T> Visitor<'de> for PurlVisitor<T>
+    impl<T> Visitor<'_> for PurlVisitor<T>
     where
         T: FromStr + PurlShape,
         <T as PurlShape>::Error: fmt::Display + From<<T as FromStr>::Err>,

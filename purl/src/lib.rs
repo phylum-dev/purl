@@ -152,7 +152,7 @@ impl PurlShape for String {
 /// Without type-specific functionality, it's possible to create PURLs that have
 /// incorrect capitalization or are missing a required namespace or required
 /// qualifiers.
-impl<'a> PurlShape for Cow<'a, str> {
+impl PurlShape for Cow<'_, str> {
     type Error = ParseError;
 
     fn package_type(&self) -> Cow<str> {

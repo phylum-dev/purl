@@ -501,9 +501,9 @@ impl<'a> Iterator for Iter<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for Iter<'a> {}
+impl ExactSizeIterator for Iter<'_> {}
 
-impl<'a> DoubleEndedIterator for Iter<'a> {
+impl DoubleEndedIterator for Iter<'_> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let (k, v) = self.0.next_back()?;
         Some((k, v.as_str()))
@@ -534,9 +534,9 @@ impl<'a> Iterator for IterMut<'a> {
     }
 }
 
-impl<'a> ExactSizeIterator for IterMut<'a> {}
+impl ExactSizeIterator for IterMut<'_> {}
 
-impl<'a> DoubleEndedIterator for IterMut<'a> {
+impl DoubleEndedIterator for IterMut<'_> {
     fn next_back(&mut self) -> Option<Self::Item> {
         let (k, v) = self.0.next_back()?;
         Some((k, v))
