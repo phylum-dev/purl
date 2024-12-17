@@ -321,6 +321,41 @@ impl<T> GenericPurl<T> {
     }
 }
 
+impl Purl {
+    /// Create a new [`PurlBuilder`] with a combined name and namespace.
+    pub fn builder_with_combined_name<S>(
+        package_type: PackageType,
+        namespaced_name: S,
+    ) -> PurlBuilder
+    where
+        S: Into<SmallString>,
+    {
+        // Split apart namespace and name based on ecosystem.
+        let namespaced_name = namespaced_name.into();
+        let (namespace, name) = match package_type {
+            PackageType::Cargo | PackageType::Gem | PackageType::NuGet | PackageType::PyPI => {
+                (None, namespaced_name)
+            },
+            PackageType::Golang | PackageType::Npm => match namespaced_name.rsplit_once('/') {
+                Some((namespace, name)) => (Some(namespace), name.into()),
+                None => (None, namespaced_name),
+            },
+            PackageType::Maven => match namespaced_name.split_once(':') {
+                Some((namespace, name)) => (Some(namespace), name.into()),
+                None => (None, namespaced_name),
+            },
+        };
+
+        // Create the PURL builder.
+        let mut builder = GenericPurlBuilder::new(package_type, name);
+        if let Some(namespace) = namespace {
+            builder = builder.with_namespace(namespace);
+        }
+
+        builder
+    }
+}
+
 /// Check whether a package type string is valid according to the rules of the
 /// PURL spec.
 #[must_use]
@@ -553,5 +588,19 @@ mod tests {
     fn subpath_when_empty_is_none() {
         let purl = GenericPurl::new(Cow::Borrowed("type"), "name").unwrap();
         assert_eq!(None, purl.subpath());
+    }
+
+    #[test]
+    fn namespaced_name() {
+        let purl =
+            Purl::builder_with_combined_name(PackageType::Npm, "@angular/cli").build().unwrap();
+        assert_eq!(purl.namespace(), Some("@angular"));
+        assert_eq!(purl.name(), "cli");
+
+        let purl = Purl::builder_with_combined_name(PackageType::Maven, "org.maven.plugins:pom")
+            .build()
+            .unwrap();
+        assert_eq!(purl.namespace(), Some("org.maven.plugins"));
+        assert_eq!(purl.name(), "pom");
     }
 }
