@@ -381,8 +381,10 @@ fn is_valid_package_type(package_type: &str) -> bool {
     // https://github.com/package-url/purl-spec/blob/master/PURL-SPECIFICATION.rst#rules-for-each-purl-component
     const ALLOWED_SPECIAL_CHARS: &[char] = &['.', '+', '-'];
     !package_type.is_empty()
+        && package_type.starts_with(|c: char| c.is_ascii_alphabetic())
         && package_type
             .chars()
+            .skip(1)
             .all(|c| c.is_ascii_alphanumeric() || ALLOWED_SPECIAL_CHARS.contains(&c))
 }
 
