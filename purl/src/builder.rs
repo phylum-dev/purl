@@ -171,7 +171,26 @@ impl<T> GenericPurlBuilder<T> {
     where
         SmallString: From<S>,
     {
-        self.parts.subpath = SmallString::from(new);
+        let new = SmallString::from(new);
+
+        // PURL subpaths are forbidden to contain these segments.
+        // The parsing spec says to remove them, so remove them here too.
+        let new = if new.split('/').any(|segment| ["", ".", ".."].contains(&segment)) {
+            let mut cleaned = SmallString::new();
+            let mut segments = new.split('/').filter(|segment| !["", ".", ".."].contains(segment));
+            if let Some(first) = segments.next() {
+                cleaned.push_str(first);
+                for rest in segments {
+                    cleaned.push('/');
+                    cleaned.push_str(rest);
+                }
+            }
+            cleaned
+        } else {
+            new
+        };
+
+        self.parts.subpath = new;
         self
     }
 
@@ -392,6 +411,12 @@ mod tests {
         }
         .without_subpath();
         assert_eq!("", &builder.parts.subpath);
+    }
+
+    #[test]
+    fn with_subpath_some_normalizes_subpath() {
+        let builder = GenericPurlBuilder::<&str>::default().with_subpath("/.././/...//.");
+        assert_eq!("...", &builder.parts.subpath);
     }
 
     #[test]

@@ -236,12 +236,15 @@ fn decode_subpath(subpath: &str) -> Result<SmallString, ParseError> {
 
     let mut rebuilt = SmallString::new();
     for segment in subpath.split('/') {
-        if ["", ".", ".."].contains(&segment) {
+        if segment.is_empty() {
             continue;
         }
         let decoded = decode(segment)?;
-        if decoded.contains('/') || [".", ".."].contains(&&*decoded) {
+        if decoded.contains('/') {
             return Err(ParseError::InvalidEscape);
+        }
+        if decoded.len() < 3 && decoded.chars().all(|c| c == '.') {
+            continue;
         }
         if !rebuilt.is_empty() {
             rebuilt.push('/');
@@ -397,8 +400,15 @@ mod tests {
     }
 
     #[test]
+    fn parse_when_subpath_contains_weird_components_preserves_them() {
+        let parsed = GenericPurl::<String>::from_str("pkg:type/name#a/.../b/").unwrap();
+        assert_eq!("pkg:type/name#a/.../b", &parsed.to_string());
+    }
+
+    #[test]
     fn parse_when_subpath_contains_invalid_components_skips_them() {
-        let parsed = GenericPurl::<String>::from_str("pkg:type/name#/a//b/./c/../d/").unwrap();
+        let parsed =
+            GenericPurl::<String>::from_str("pkg:type/name#/a//b/./c/../%2E%2E/d/").unwrap();
         assert_eq!("pkg:type/name#a/b/c/d", &parsed.to_string());
     }
 
