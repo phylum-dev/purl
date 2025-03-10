@@ -1,6 +1,7 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
+use std::fmt::Write as _;
 use std::fs;
-use std::io::{BufWriter, Write};
+use std::io::{BufWriter, Write as _};
 use std::str::FromStr;
 
 use convert_case::{Case, Casing};
@@ -25,6 +26,8 @@ const BLACKLIST: &[&str] = &[
     "github namespace and name should be lowercased",
     "Hugging Face model with various cases",
     "MLflow model tracked in Azure Databricks (case insensitive)",
+    // This test is currently wrong. package-url/purl-spec#416
+    "docker uses qualifiers and hash image id as versions",
 ];
 
 lazy_static! {
@@ -51,11 +54,12 @@ pub fn main() {
     let phylum_tests: Vec<Test> = serde_json::from_str(PHYLUM_TEST_SUITE_DATA)
         .expect("Could not read phylum-test-suite-data.json");
 
+    let mut names = HashSet::new();
     let tests = purl_tests
         .into_iter()
         .chain(phylum_tests)
         .filter(|t| !BLACKLIST.contains(&t.description))
-        .map(test_to_tokens);
+        .map(|t| test_to_tokens(t, &mut names));
     let suite = parse_quote! {
         use std::collections::HashMap;
         use std::str::FromStr;
@@ -75,7 +79,7 @@ pub fn main() {
     writeln!(file, "{}", prettyplease::unparse(&suite)).unwrap();
 }
 
-fn test_to_tokens(test: Test) -> Option<TokenStream> {
+fn test_to_tokens(test: Test, names: &mut HashSet<String>) -> Option<TokenStream> {
     let Test {
         description,
         purl,
@@ -88,13 +92,26 @@ fn test_to_tokens(test: Test) -> Option<TokenStream> {
         subpath,
         is_invalid,
     } = test;
-    let test_name = format_ident!(
-        "{}",
-        UNDERSCORES.replace_all(
-            &description.to_case(Case::Snake).replace(|c: char| !c.is_alphanumeric(), "_"),
-            "_"
-        )
-    );
+
+    let test_name = description.to_case(Case::Snake).replace(|c: char| !c.is_alphanumeric(), "_");
+    let mut test_name = UNDERSCORES.replace_all(&test_name, "_");
+    if names.contains(&*test_name) {
+        let test_name = test_name.to_mut();
+        while test_name.ends_with('_') {
+            test_name.truncate(test_name.len() - 1);
+        }
+        let base_len = test_name.len() + 1;
+        test_name.push_str("_1");
+        let mut number = 1;
+        while names.contains(test_name) {
+            test_name.truncate(base_len);
+            number += 1;
+            write!(test_name, "{number}").unwrap();
+        }
+    }
+    names.insert(test_name.clone().into_owned());
+    let test_name = format_ident!("{test_name}");
+
     let parsed_type = r#type.and_then(|t| PackageType::from_str(t).ok());
     Some(if is_invalid {
         quote! {
