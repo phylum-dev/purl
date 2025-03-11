@@ -2612,3 +2612,68 @@ fn version_encoding() {
         "Incorrect qualifiers for canonicalized PURL"
     );
 }
+#[test]
+/// ampersand in qualifier value
+fn ampersand_in_qualifier_value() {
+    let parsed = {
+        assert!(
+            matches!(
+                Purl::from_str("pkg:generic/name?qualifier=v%26lue"),
+                Err(PackageError::UnsupportedType)
+            ),
+            "Type {} is not supported",
+            "generic"
+        );
+        match GenericPurl::<String>::from_str("pkg:generic/name?qualifier=v%26lue") {
+            Ok(purl) => purl,
+            Err(error) => {
+                panic!(
+                    "Failed to parse valid purl {:?}: {}",
+                    "pkg:generic/name?qualifier=v%26lue", error
+                )
+            },
+        }
+    };
+    assert_eq!("generic", parsed.package_type(), "Incorrect package type");
+    assert_eq!(None, parsed.namespace(), "Incorrect namespace");
+    assert_eq!("name", parsed.name(), "Incorrect name");
+    assert_eq!(None, parsed.version(), "Incorrect version");
+    assert_eq!(None, parsed.subpath(), "Incorrect subpath");
+    assert_eq!(
+        [("qualifier", "v&lue")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed.qualifiers().iter().map(|(k, v)| (k.as_str(), v)).collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers"
+    );
+    let canonicalized = parsed.to_string();
+    assert_eq!(
+        "pkg:generic/name?qualifier=v%26lue", canonicalized,
+        "Incorrect string representation"
+    );
+    let parsed_canonical = match GenericPurl::<String>::from_str(&canonicalized) {
+        Ok(purl) => purl,
+        Err(error) => {
+            panic!(
+                "Failed to parse valid purl {:?}: {}",
+                "pkg:generic/name?qualifier=v%26lue", error
+            )
+        },
+    };
+    assert_eq!(
+        "generic",
+        parsed_canonical.package_type(),
+        "Incorrect package type for canonicalized PURL"
+    );
+    assert_eq!(None, parsed_canonical.namespace(), "Incorrect namespace for canonicalized PURL");
+    assert_eq!("name", parsed_canonical.name(), "Incorrect name for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.version(), "Incorrect version for canonicalized PURL");
+    assert_eq!(None, parsed_canonical.subpath(), "Incorrect subpath for canonicalized PURL");
+    assert_eq!(
+        [("qualifier", "v&lue")].into_iter().collect::<HashMap<&str, &str>>(),
+        parsed_canonical
+            .qualifiers()
+            .iter()
+            .map(|(k, v)| (k.as_str(), v))
+            .collect::<HashMap<&str, &str>>(),
+        "Incorrect qualifiers for canonicalized PURL"
+    );
+}

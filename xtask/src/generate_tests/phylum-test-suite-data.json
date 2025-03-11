@@ -143,5 +143,16 @@
     "name": "name",
     "version": "a#/b?/c@",
     "is_invalid": false
+  },
+  {
+    "description": "ampersand in qualifier value",
+    "purl": "pkg:generic/name?qualifier=v%26lue",
+    "canonical_purl": "pkg:generic/name?qualifier=v%26lue",
+    "type": "generic",
+    "name": "name",
+    "qualifiers": {
+      "qualifier": "v&lue"
+    },
+    "is_invalid": false
   }
 ]
