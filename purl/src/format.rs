@@ -23,7 +23,8 @@ const PURL_PATH: &AsciiSet = &PATH.add(b'@').add(b'?').add(b'#').add(b'%');
 const PURL_PATH_SEGMENT: &AsciiSet = &PURL_PATH.add(b'/');
 // For compatibility with PURL implementations that treat qualifiers as
 // form-urlencoded, escape '+' as well.
-const PURL_QUERY: &AsciiSet = &QUERY.add(b'@').add(b'?').add(b'#').add(b'+').add(b'%');
+const PURL_QUALIFIER: &AsciiSet =
+    &QUERY.add(b'@').add(b'?').add(b'#').add(b'+').add(b'%').add(b'&');
 const PURL_FRAGMENT: &AsciiSet = &FRAGMENT.add(b'@').add(b'?').add(b'#').add(b'%');
 
 impl<T> fmt::Display for GenericPurl<T>
@@ -66,8 +67,8 @@ where
                     f,
                     "{}{}={}",
                     prefix,
-                    utf8_percent_encode(k, PURL_QUERY),
-                    utf8_percent_encode(v, PURL_QUERY),
+                    utf8_percent_encode(k, PURL_QUALIFIER),
+                    utf8_percent_encode(v, PURL_QUALIFIER),
                 )?;
                 prefix = '&';
             }

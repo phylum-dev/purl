@@ -1282,3 +1282,26 @@ fn version_encoding() {
         "Constructing PURL from parts should result in canonical PURL"
     );
 }
+#[test]
+/// ampersand in qualifier value
+fn ampersand_in_qualifier_value() {
+    let canonical = GenericPurl::<String>::from_str("pkg:generic/name?qualifier=v%26lue")
+        .expect("Canonical PURL should parse");
+    assert_eq!(
+        "pkg:generic/name?qualifier=v%26lue",
+        canonical.to_string(),
+        "Parsed canonical PURL should format as the same string",
+    );
+    let parsed = GenericPurl::<String>::from_str("pkg:generic/name?qualifier=v%26lue")
+        .expect("Test PURL should parse");
+    assert_eq!(canonical, parsed, "Test PURL should parse as canonical PURL");
+    let from_parts =
+        Result::<_, ParseError>::Ok(GenericPurl::builder("generic".to_owned(), "name"))
+            .and_then(|builder| Ok(builder.with_qualifier("qualifier", "v&lue")?))
+            .and_then(|builder| builder.build())
+            .expect("Constructing valid PURL from parts should succeed");
+    assert_eq!(
+        canonical, from_parts,
+        "Constructing PURL from parts should result in canonical PURL"
+    );
+}
