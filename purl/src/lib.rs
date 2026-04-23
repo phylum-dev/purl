@@ -117,7 +117,7 @@ pub trait PurlShape {
     /// The returned value should be a lower case string. If the returned value
     /// contains invalid characters, `Display` and `to_string` will panic.
     #[must_use]
-    fn package_type(&self) -> Cow<str>;
+    fn package_type(&self) -> Cow<'_, str>;
 
     /// Preview and potentially modify the parts that make up a PURL.
     ///
@@ -136,7 +136,7 @@ pub trait PurlShape {
 impl PurlShape for String {
     type Error = ParseError;
 
-    fn package_type(&self) -> Cow<str> {
+    fn package_type(&self) -> Cow<'_, str> {
         Cow::Borrowed(self)
     }
 
@@ -155,7 +155,7 @@ impl PurlShape for String {
 impl PurlShape for Cow<'_, str> {
     type Error = ParseError;
 
-    fn package_type(&self) -> Cow<str> {
+    fn package_type(&self) -> Cow<'_, str> {
         Cow::Borrowed(self)
     }
 
@@ -188,7 +188,7 @@ where
 {
     type Error = ParseError;
 
-    fn package_type(&self) -> Cow<str> {
+    fn package_type(&self) -> Cow<'_, str> {
         Cow::Borrowed(self)
     }
 

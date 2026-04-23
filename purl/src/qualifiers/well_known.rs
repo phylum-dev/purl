@@ -216,7 +216,7 @@ impl Checksum<'_> {
     /// Iterate over the hashes.
     ///
     /// Hashes are returned in no particular order.
-    pub fn iter(&self) -> ChecksumIter {
+    pub fn iter(&self) -> ChecksumIter<'_> {
         ChecksumIter(self.algorithms.iter())
     }
 }

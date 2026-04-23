@@ -297,7 +297,7 @@ fn decode_namespace(namespace: &str) -> Result<SmallString, ParseError> {
     Ok(rebuilt)
 }
 
-fn decode(input: &str) -> Result<Cow<str>, ParseError> {
+fn decode(input: &str) -> Result<Cow<'_, str>, ParseError> {
     percent_decode_str(input).decode_utf8().map_err(|_| ParseError::InvalidEscape)
 }
 

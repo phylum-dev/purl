@@ -63,14 +63,14 @@ impl Qualifiers {
     }
 
     /// Iterate over the elements of the list.
-    pub fn iter(&self) -> Iter {
+    pub fn iter(&self) -> Iter<'_> {
         Iter(self.qualifiers.iter())
     }
 
     /// Iterate over the elements of the list.
     ///
     /// Only the value may be mutated.
-    pub fn iter_mut(&mut self) -> IterMut {
+    pub fn iter_mut(&mut self) -> IterMut<'_> {
         IterMut(self.qualifiers.iter_mut())
     }
 
@@ -159,7 +159,7 @@ impl Qualifiers {
     /// This allows obtaining the current value and modifying it or inserting a
     /// new value without needing to search for the qualifier multiple
     /// times.
-    pub fn entry<K>(&mut self, key: K) -> Result<Entry<K>, ParseError>
+    pub fn entry<K>(&mut self, key: K) -> Result<Entry<'_, K>, ParseError>
     where
         K: AsRef<str>,
     {

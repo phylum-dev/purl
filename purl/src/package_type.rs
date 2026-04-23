@@ -243,7 +243,7 @@ impl From<UnsupportedPackageType> for PackageError {
 impl PurlShape for PackageType {
     type Error = PackageError;
 
-    fn package_type(&self) -> Cow<str> {
+    fn package_type(&self) -> Cow<'_, str> {
         self.name().into()
     }
 

@@ -119,7 +119,7 @@ mod tests {
         impl PurlShape for MyBadPackageType {
             type Error = ParseError;
 
-            fn package_type(&self) -> Cow<str> {
+            fn package_type(&self) -> Cow<'_, str> {
                 Cow::Borrowed("!")
             }
 
