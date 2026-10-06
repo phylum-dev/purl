@@ -264,6 +264,16 @@ impl<T> GenericPurl<T> {
         GenericPurlBuilder::new(package_type, name)
     }
 
+    /// Create a PURL from an ecosystem, combined namespace + name, and version.
+    #[cfg(feature = "package-type")]
+    pub fn builder_combined_name(
+        package_type: PackageType,
+        name: &str,
+    ) -> GenericPurlBuilder<PackageType> {
+        let (namespace, name) = split_namespace_name(package_type, name);
+        Purl::builder(package_type, name).with_namespace(namespace)
+    }
+
     /// Create a new PURL.
     ///
     /// An error will be returned if the [`PurlShape`] implementation `T`
@@ -372,6 +382,22 @@ impl Purl {
                 None => self.name().into(),
             },
         }
+    }
+}
+
+/// Splits a package name into a namespace and name.
+#[cfg(feature = "package-type")]
+pub fn split_namespace_name(package_type: PackageType, name: &str) -> (&str, &str) {
+    match package_type {
+        PackageType::Golang | PackageType::Npm => {
+            let (namespace, name) = name.rsplit_once('/').unwrap_or(("", name));
+            (namespace, name)
+        },
+        PackageType::Maven => {
+            let (namespace, name) = name.split_once(':').unwrap_or(("", name));
+            (namespace, name)
+        },
+        _ => ("", name),
     }
 }
 

@@ -114,8 +114,8 @@ mod tests {
         struct MyBadPackageType;
 
         // Properly implemented `PurlShape`s only return valid package types.
-        // Even the included string-based implementations validate the package type in
-        // the `finish` method.
+        // Even the included string-based implementations validate the package
+        // type in the `finish` method.
         impl PurlShape for MyBadPackageType {
             type Error = ParseError;
 
@@ -133,8 +133,8 @@ mod tests {
                 _ = purl.to_string();
             },
             Err(error) => {
-                // Don't use unwrap or the test will incorrectly pass if the purl cannot be
-                // built.
+                // Don't use unwrap or the test will incorrectly pass if the
+                // purl cannot be built.
                 eprintln!("Unexpected error: {}", error);
             },
         }

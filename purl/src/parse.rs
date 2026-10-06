@@ -171,14 +171,14 @@ where
         // Check for `pkg:` first to quickly reject non-PURLs.
         let s = s.strip_prefix("pkg:").ok_or(ParseError::UnsupportedUrlScheme)?;
 
-        // PURLs are not supposed to have any leading slashes, but the spec says that
-        // parsers must ignore them.
+        // PURLs are not supposed to have any leading slashes, but the spec says
+        // that parsers must ignore them.
         let s = s.trim_start_matches('/');
 
         let mut parts = PurlParts::default();
 
-        // Remove subpath and qualifiers from the end now because they have higher
-        // precedence than the path separater.
+        // Remove subpath and qualifiers from the end now because they have
+        // higher precedence than the path separater.
         let s = match s.rsplit_once('#') {
             Some((s, subpath)) => {
                 parts.subpath = decode_subpath(subpath)?;
