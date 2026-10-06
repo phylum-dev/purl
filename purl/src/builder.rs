@@ -220,9 +220,10 @@ impl<T> GenericPurlBuilder<T> {
         self.parts.qualifiers.retain(|_, v| !v.is_empty());
 
         if let Some(checksum) = self.parts.qualifiers.try_get_typed::<Checksum>()? {
-            // We can't just use `try_insert_typed` because we can't express to the borrow
-            // checker that `Checksum<'a>`'s immutable borrow of `self.parts.qualifiers`
-            // ends in the middle of `try_insert_typed` before the mutable borrow is
+            // We can't just use `try_insert_typed` because we can't express to
+            // the borrow checker that `Checksum<'a>`'s immutable
+            // borrow of `self.parts.qualifiers` ends in the middle
+            // of `try_insert_typed` before the mutable borrow is
             // required.
             self.parts.qualifiers.insert(Checksum::KEY, SmallString::try_from(checksum)?)?;
         }
