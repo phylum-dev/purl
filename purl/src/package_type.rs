@@ -296,8 +296,8 @@ mod tests {
 
     #[test]
     fn maven_requires_namespace() {
-        // This is also covered by the test suite, but this one asserts that the correct
-        // error is returned.
+        // This is also covered by the test suite, but this one asserts that the
+        // correct error is returned.
         let error = Purl::new(PackageType::Maven, "invalid").unwrap_err();
         assert!(
             matches!(error, PackageError::MissingRequiredField(PurlField::Namespace)),

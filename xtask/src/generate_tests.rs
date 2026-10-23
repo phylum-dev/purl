@@ -145,10 +145,10 @@ fn test_to_tokens(test: Test, names: &mut HashSet<String>) -> Option<TokenStream
             }
         });
     } else {
-        // For all the unsupported cases, we can still verify the ability to handle them
-        // without type-specific rules.
-        // If the type-specific rules are required for the test to pass, the test needs
-        // to be added to BLACKLIST.
+        // For all the unsupported cases, we can still verify the ability to
+        // handle them without type-specific rules.
+        // If the type-specific rules are required for the test to pass, the
+        // test needs to be added to BLACKLIST.
         parse = quote! {
             GenericPurl::<String>::from_str(#purl)
         };
